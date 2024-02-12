@@ -23,7 +23,7 @@ func CacheURL(originalURL string) string {
 		shortURL = GenerateShortPath()
 	}
 	config.Cache[shortURL] = originalURL
-	return shortURL
+	return "http://localhost:8080/" + shortURL
 }
 
 func GetOriginalURL(shortURL string) (string, bool) {
