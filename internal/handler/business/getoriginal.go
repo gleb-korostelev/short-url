@@ -14,7 +14,10 @@ func GetOriginal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := r.URL.Path[1:]
-
+	if id == "" {
+		http.Error(w, "This URL doesn't exist", http.StatusBadRequest)
+		return
+	}
 	config.Mu.Lock()
 	originalURL, exists := config.Cache[id]
 	config.Mu.Unlock()
@@ -25,6 +28,6 @@ func GetOriginal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusTemporaryRedirect)
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("content-type", "text/plain")
 	fmt.Fprint(w, string(originalURL))
 }

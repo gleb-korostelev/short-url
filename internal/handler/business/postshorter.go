@@ -24,7 +24,7 @@ func PostShorter(w http.ResponseWriter, r *http.Request) {
 
 	shortUrl := utils.CacheURL(originalURL)
 
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprint(w, shortUrl)
 }
