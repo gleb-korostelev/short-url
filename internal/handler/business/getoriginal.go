@@ -20,11 +20,10 @@ func GetOriginal(w http.ResponseWriter, r *http.Request) {
 	config.Mu.Unlock()
 
 	if !exists {
-		http.NotFound(w, r)
+		http.Error(w, "This URL doesn't exist", http.StatusBadRequest)
 		return
 	}
 
-	// http.Redirect(w, r, originalURL, http.StatusTemporaryRedirect) // Использование кода 307
 	w.WriteHeader(http.StatusTemporaryRedirect)
 	w.Header().Set("content-type", "application/json")
 	fmt.Fprint(w, string(originalURL))

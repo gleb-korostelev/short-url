@@ -6,6 +6,8 @@ import (
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 )
 
+var MockCacheURL func(string) string
+
 func GenerateShortPath() string {
 	b := make([]byte, config.Length)
 	for i := range b {
@@ -15,6 +17,10 @@ func GenerateShortPath() string {
 }
 
 func CacheURL(originalURL string) string {
+	if MockCacheURL != nil {
+		return MockCacheURL(originalURL)
+	}
+
 	config.Mu.Lock()
 	defer config.Mu.Unlock()
 
@@ -23,7 +29,7 @@ func CacheURL(originalURL string) string {
 		shortURL = GenerateShortPath()
 	}
 	config.Cache[shortURL] = originalURL
-	return shortURL
+	return "http://localhost:8080/" + shortURL
 }
 
 func GetOriginalURL(shortURL string) (string, bool) {
