@@ -1,7 +1,6 @@
 package business
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
@@ -27,7 +26,7 @@ func GetOriginal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusTemporaryRedirect)
 	w.Header().Set("content-type", "text/plain")
-	fmt.Fprint(w, string(originalURL))
+	w.Header().Set("Location", string(originalURL))
+	w.WriteHeader(http.StatusTemporaryRedirect)
 }
