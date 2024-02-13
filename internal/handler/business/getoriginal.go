@@ -1,7 +1,6 @@
 package business
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
@@ -23,8 +22,6 @@ func GetOriginal(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "This URL doesn't exist", http.StatusBadRequest)
 		return
 	}
-
+	w.Header().Set("Location", originalURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
-	w.Header().Set("content-type", "text/plain")
-	fmt.Fprint(w, string(originalURL))
 }
