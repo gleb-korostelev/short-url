@@ -9,7 +9,7 @@ const (
 	Letters              = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	Length               = 8
 	DefaultServerAddress = "localhost:8080"
-	DefaultBaseUrl       = "http://localhost:8080/"
+	DefaultBaseUrl       = "http://localhost:8080"
 )
 
 var (
