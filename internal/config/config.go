@@ -17,7 +17,7 @@ var (
 
 func init() {
 	flag.StringVar(&ServerAddr, "a", "localhost:8080", "address to run HTTP server on")
-	flag.StringVar(&BaseURL, "b", "http://localhost:8080/", "base address for the resulting shortened URLs")
+	flag.StringVar(&BaseURL, "b", "http://localhost:8080", "base address for the resulting shortened URLs")
 }
 
 var (
