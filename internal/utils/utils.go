@@ -29,7 +29,7 @@ func CacheURL(originalURL string) string {
 		shortURL = GenerateShortPath()
 	}
 	config.Cache[shortURL] = originalURL
-	return config.BaseURL + shortURL
+	return config.BaseURL + "/" + shortURL
 }
 
 func GetOriginalURL(shortURL string) (string, bool) {
