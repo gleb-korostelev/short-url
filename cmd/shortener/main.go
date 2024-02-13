@@ -13,12 +13,11 @@ import (
 func main() {
 	r := router.RouterInit()
 
-	flag.Parse() // Парсинг флагов
+	flag.Parse()
 
 	config.ServerAddr = utils.GetEnv("SERVER_ADDRESS", config.ServerAddr)
 	config.BaseURL = utils.GetEnv("BASE_URL", config.BaseURL)
-
-	// Вывод сконфигурированных значений (для проверки)
+	
 	fmt.Printf("Server will run on: %s\n", config.ServerAddr)
 	fmt.Printf("Base URL for shortened links: %s\n", config.BaseURL)
 
