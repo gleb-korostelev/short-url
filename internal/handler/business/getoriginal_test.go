@@ -19,12 +19,12 @@ func TestGetOriginal(t *testing.T) {
 
 		GetOriginal(responseRecorder, request)
 
-		result := responseRecorder.Body.String()
-		if result != testURL {
-			t.Errorf("Expected %s, got %s", testURL, result)
-		}
 		if status := responseRecorder.Code; status != http.StatusTemporaryRedirect {
 			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusTemporaryRedirect)
+		}
+
+		if location := responseRecorder.Header().Get("Location"); location != testURL {
+			t.Errorf("Expected location header %s, got %s", testURL, location)
 		}
 	})
 

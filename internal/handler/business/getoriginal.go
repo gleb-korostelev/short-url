@@ -26,7 +26,6 @@ func GetOriginal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("content-type", "text/plain")
 	w.Header().Set("Location", string(originalURL))
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
