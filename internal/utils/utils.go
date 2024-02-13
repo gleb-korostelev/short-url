@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"fmt"
 	"math/rand"
+	"os"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 )
@@ -38,4 +40,12 @@ func GetOriginalURL(shortURL string) (string, bool) {
 
 	originalURL, exists := config.Cache[shortURL]
 	return originalURL, exists
+}
+
+func GetEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		fmt.Println(key)
+		return value
+	}
+	return fallback
 }

@@ -7,12 +7,16 @@ import (
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/handler/router"
+	"github.com/gleb-korostelev/short-url.git/internal/utils"
 )
 
 func main() {
 	r := router.RouterInit()
 
 	flag.Parse() // Парсинг флагов
+
+	config.ServerAddr = utils.GetEnv("SERVER_ADDRESS", config.ServerAddr)
+	config.BaseURL = utils.GetEnv("BASE_URL", config.BaseURL)
 
 	// Вывод сконфигурированных значений (для проверки)
 	fmt.Printf("Server will run on: %s\n", config.ServerAddr)
