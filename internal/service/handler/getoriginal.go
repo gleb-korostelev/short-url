@@ -1,25 +1,21 @@
-package business
+package handler
 
 import (
 	"net/http"
 
-	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/go-chi/chi/v5"
 )
 
 func GetOriginal(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Only Get method is allowed", http.StatusBadRequest)
-		return
-	}
-
-	id := r.URL.Path[1:]
+	id := chi.URLParam(r, "id")
 	if id == "" {
 		http.Error(w, "This URL doesn't exist", http.StatusBadRequest)
 		return
 	}
-	config.Mu.Lock()
-	originalURL, exists := config.Cache[id]
-	config.Mu.Unlock()
+	business.Mu.RLock()
+	originalURL, exists := business.Cache[id]
+	business.Mu.RUnlock()
 
 	if !exists {
 		http.Error(w, "This URL doesn't exist", http.StatusBadRequest)

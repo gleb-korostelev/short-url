@@ -2,7 +2,8 @@ package config
 
 import (
 	"flag"
-	"sync"
+	"fmt"
+	"os"
 )
 
 const (
@@ -18,11 +19,20 @@ var (
 )
 
 func init() {
+
 	flag.StringVar(&ServerAddr, "a", DefaultServerAddress, "address to run HTTP server on")
 	flag.StringVar(&BaseURL, "b", DefaultBaseURL, "base address for the resulting shortened URLs")
+
+	flag.Parse()
+
+	ServerAddr = GetEnv("SERVER_ADDRESS", ServerAddr)
+	BaseURL = GetEnv("BASE_URL", BaseURL)
 }
 
-var (
-	Cache = make(map[string]string)
-	Mu    sync.RWMutex
-)
+func GetEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		fmt.Println(key)
+		return value
+	}
+	return fallback
+}

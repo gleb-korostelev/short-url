@@ -1,14 +1,17 @@
-package utils
+package business
 
 import (
-	"fmt"
 	"math/rand"
-	"os"
+	"sync"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 )
 
-var MockCacheURL func(string) string
+var (
+	Cache        = make(map[string]string)
+	Mu           sync.RWMutex
+	MockCacheURL func(string) string
+)
 
 func GenerateShortPath() string {
 	b := make([]byte, config.Length)
@@ -23,29 +26,21 @@ func CacheURL(originalURL string) string {
 		return MockCacheURL(originalURL)
 	}
 
-	config.Mu.Lock()
-	defer config.Mu.Unlock()
+	Mu.RLock()
+	defer Mu.RUnlock()
 
 	shortURL := GenerateShortPath()
-	for _, exists := config.Cache[shortURL]; exists; {
+	for _, exists := Cache[shortURL]; exists; {
 		shortURL = GenerateShortPath()
 	}
-	config.Cache[shortURL] = originalURL
+	Cache[shortURL] = originalURL
 	return config.BaseURL + "/" + shortURL
 }
 
 func GetOriginalURL(shortURL string) (string, bool) {
-	config.Mu.RLock()
-	defer config.Mu.RUnlock()
+	Mu.RLock()
+	defer Mu.RUnlock()
 
-	originalURL, exists := config.Cache[shortURL]
+	originalURL, exists := Cache[shortURL]
 	return originalURL, exists
-}
-
-func GetEnv(key, fallback string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		fmt.Println(key)
-		return value
-	}
-	return fallback
 }

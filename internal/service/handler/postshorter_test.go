@@ -1,4 +1,4 @@
-package business
+package handler
 
 import (
 	"bytes"
@@ -6,14 +6,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gleb-korostelev/short-url.git/internal/utils"
+	"github.com/gleb-korostelev/short-url.git/internal/service/business"
 )
 
 func TestPostShorter(t *testing.T) {
-	utils.MockCacheURL = func(originalURL string) string {
+	business.MockCacheURL = func(originalURL string) string {
 		return "http://short.url/test"
 	}
-	defer func() { utils.MockCacheURL = nil }()
+	defer func() { business.MockCacheURL = nil }()
 
 	t.Run("Create Short URL", func(t *testing.T) {
 		originalURL := "https://example.com"

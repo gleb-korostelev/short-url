@@ -1,17 +1,17 @@
-package business
+package handler
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/service/business"
 )
 
 func TestGetOriginal(t *testing.T) {
 	testShort := "testID"
 	testURL := "https://example.com"
-	config.Cache[testShort] = testURL
+	business.Cache[testShort] = testURL
 
 	t.Run("Valid ID", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/"+testShort, nil)
