@@ -21,7 +21,7 @@ func TestGetOriginal(t *testing.T) {
 	cache.Cache[testShort] = testURL
 
 	t.Run("Valid ID", func(t *testing.T) {
-		resp, err := http.Get(ts.URL + "/" + testShort) // Делаем запрос к тестовому серверу
+		resp, err := http.Get(ts.URL + "/" + testShort)
 		if err != nil {
 			t.Fatalf("Failed to make request: %v", err)
 		}
@@ -29,12 +29,13 @@ func TestGetOriginal(t *testing.T) {
 	})
 
 	t.Run("Invalid ID", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/nonexistent", nil)
-		responseRecorder := httptest.NewRecorder()
+		resp, err := http.Get(ts.URL + "/nonexistent")
+		if err != nil {
+			t.Fatalf("Failed to make request: %v", err)
+		}
+		defer resp.Body.Close()
 
-		GetOriginal(responseRecorder, request)
-
-		if status := responseRecorder.Code; status != http.StatusBadRequest {
+		if status := resp.StatusCode; status != http.StatusBadRequest {
 			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusBadRequest)
 		}
 	})
