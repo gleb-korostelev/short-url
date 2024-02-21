@@ -23,8 +23,6 @@ func init() {
 	flag.StringVar(&ServerAddr, "a", DefaultServerAddress, "address to run HTTP server on")
 	flag.StringVar(&BaseURL, "b", DefaultBaseURL, "base address for the resulting shortened URLs")
 
-	flag.Parse()
-
 	ServerAddr = GetEnv("SERVER_ADDRESS", ServerAddr)
 	BaseURL = GetEnv("BASE_URL", BaseURL)
 }

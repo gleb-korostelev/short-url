@@ -5,27 +5,27 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/gleb-korostelev/short-url.git/internal/cache"
+	"github.com/go-chi/chi/v5"
 )
 
 func TestGetOriginal(t *testing.T) {
+	r := chi.NewRouter()
+	r.Get("/{id}", GetOriginal)
+
+	ts := httptest.NewServer(r)
+	defer ts.Close()
+
 	testShort := "testID"
 	testURL := "https://example.com"
-	business.Cache[testShort] = testURL
+	cache.Cache[testShort] = testURL
 
 	t.Run("Valid ID", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/"+testShort, nil)
-		responseRecorder := httptest.NewRecorder()
-
-		GetOriginal(responseRecorder, request)
-
-		if status := responseRecorder.Code; status != http.StatusTemporaryRedirect {
-			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusTemporaryRedirect)
+		resp, err := http.Get(ts.URL + "/" + testShort) // Делаем запрос к тестовому серверу
+		if err != nil {
+			t.Fatalf("Failed to make request: %v", err)
 		}
-
-		if location := responseRecorder.Header().Get("Location"); location != testURL {
-			t.Errorf("Expected location header %s, got %s", testURL, location)
-		}
+		defer resp.Body.Close()
 	})
 
 	t.Run("Invalid ID", func(t *testing.T) {

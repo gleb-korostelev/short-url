@@ -6,14 +6,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/gleb-korostelev/short-url.git/internal/cache"
 )
 
 func TestPostShorter(t *testing.T) {
-	business.MockCacheURL = func(originalURL string) string {
+	cache.MockCacheURL = func(originalURL string) string {
 		return "http://short.url/test"
 	}
-	defer func() { business.MockCacheURL = nil }()
+	defer func() { cache.MockCacheURL = nil }()
 
 	t.Run("Create Short URL", func(t *testing.T) {
 		originalURL := "https://example.com"

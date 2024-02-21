@@ -2,15 +2,9 @@ package business
 
 import (
 	"math/rand"
-	"sync"
 
+	"github.com/gleb-korostelev/short-url.git/internal/cache"
 	"github.com/gleb-korostelev/short-url.git/internal/config"
-)
-
-var (
-	Cache        = make(map[string]string)
-	Mu           sync.RWMutex
-	MockCacheURL func(string) string
 )
 
 func GenerateShortPath() string {
@@ -22,25 +16,25 @@ func GenerateShortPath() string {
 }
 
 func CacheURL(originalURL string) string {
-	if MockCacheURL != nil {
-		return MockCacheURL(originalURL)
+	if cache.MockCacheURL != nil {
+		return cache.MockCacheURL(originalURL)
 	}
 
-	Mu.RLock()
-	defer Mu.RUnlock()
+	cache.Mu.RLock()
+	defer cache.Mu.RUnlock()
 
 	shortURL := GenerateShortPath()
-	for _, exists := Cache[shortURL]; exists; {
+	for _, exists := cache.Cache[shortURL]; exists; {
 		shortURL = GenerateShortPath()
 	}
-	Cache[shortURL] = originalURL
+	cache.Cache[shortURL] = originalURL
 	return config.BaseURL + "/" + shortURL
 }
 
 func GetOriginalURL(shortURL string) (string, bool) {
-	Mu.RLock()
-	defer Mu.RUnlock()
+	cache.Mu.RLock()
+	defer cache.Mu.RUnlock()
 
-	originalURL, exists := Cache[shortURL]
+	originalURL, exists := cache.Cache[shortURL]
 	return originalURL, exists
 }
