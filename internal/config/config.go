@@ -9,8 +9,8 @@ import (
 const (
 	Letters              = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	Length               = 8
-	DefaultServerAddress = "localhost:8081"
-	DefaultBaseURL       = "http://localhost:8081"
+	DefaultServerAddress = "localhost:8080"
+	DefaultBaseURL       = "http://localhost:8080"
 )
 
 var (
