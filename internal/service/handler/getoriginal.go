@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gleb-korostelev/short-url.git/internal/cache"
+	"github.com/gleb-korostelev/short-url.git/internal/service/business"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -15,8 +16,9 @@ func GetOriginal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cache.Mu.RLock()
-	originalURL, exists := cache.Cache[id]
+	originalURL, exists := business.GetOriginalURL(id)
 	cache.Mu.RUnlock()
+
 	if !exists {
 		http.Error(w, "This URL doesn't exist", http.StatusBadRequest)
 		return

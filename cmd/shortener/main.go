@@ -3,14 +3,13 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"flag"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/service/router"
 )
 
 func main() {
-	flag.Parse()
+	config.ConfigInit()
 	r := router.RouterInit()
 
 	fmt.Printf("Server will run on: %s\n", config.ServerAddr)

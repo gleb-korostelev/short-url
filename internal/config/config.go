@@ -9,8 +9,8 @@ import (
 const (
 	Letters              = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	Length               = 8
-	DefaultServerAddress = "localhost:8080"
-	DefaultBaseURL       = "http://localhost:8080"
+	DefaultServerAddress = "localhost:8081"
+	DefaultBaseURL       = "http://localhost:8081"
 )
 
 var (
@@ -18,10 +18,12 @@ var (
 	BaseURL    string
 )
 
-func init() {
+func ConfigInit() {
 
 	flag.StringVar(&ServerAddr, "a", DefaultServerAddress, "address to run HTTP server on")
 	flag.StringVar(&BaseURL, "b", DefaultBaseURL, "base address for the resulting shortened URLs")
+
+	flag.Parse()
 
 	ServerAddr = GetEnv("SERVER_ADDRESS", ServerAddr)
 	BaseURL = GetEnv("BASE_URL", BaseURL)

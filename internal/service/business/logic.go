@@ -16,10 +16,6 @@ func GenerateShortPath() string {
 }
 
 func CacheURL(originalURL string) string {
-	if cache.MockCacheURL != nil {
-		return cache.MockCacheURL(originalURL)
-	}
-
 	cache.Mu.RLock()
 	defer cache.Mu.RUnlock()
 
