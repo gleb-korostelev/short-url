@@ -20,7 +20,11 @@ func PostShorterJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL := business.CacheURL(payload.URL)
+	shortURL, err := business.CacheURL(payload.URL)
+	if err != nil {
+		http.Error(w, "Error with saving file", http.StatusBadRequest)
+		return
+	}
 
 	response := models.ShortURLResponse{Result: shortURL}
 	w.Header().Set("Content-Type", "application/json")
