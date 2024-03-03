@@ -8,7 +8,7 @@ import (
 	"github.com/gleb-korostelev/short-url.git/internal/service/business"
 )
 
-func PostShorterJson(w http.ResponseWriter, r *http.Request) {
+func PostShorterJSON(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST method is allowed", http.StatusBadRequest)
 		return
