@@ -3,13 +3,13 @@ package business
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"os"
 
 	"github.com/gleb-korostelev/short-url.git/internal/cache"
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/models"
+	"github.com/google/uuid"
 )
 
 func GenerateShortPath() string {
@@ -33,7 +33,8 @@ func CacheURL(originalURL string) (string, error) {
 	var save models.URLData
 	save.OriginalURL = originalURL
 	save.ShortURL = shortURL
-	save.UUID = fmt.Sprint(len(cache.Cache))
+	save.UUID = uuid.New()
+	// save.UUID = fmt.Sprint(len(cache.Cache))
 
 	err := SaveURLs(save)
 	if err != nil {

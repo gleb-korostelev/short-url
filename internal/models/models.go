@@ -1,5 +1,7 @@
 package models
 
+import "github.com/google/uuid"
+
 type URLPayload struct {
 	URL string `json:"url"`
 }
@@ -9,7 +11,7 @@ type ShortURLResponse struct {
 }
 
 type URLData struct {
-	UUID        string `json:"uuid"`
-	ShortURL    string `json:"short_url"`
-	OriginalURL string `json:"original_url"`
+	UUID        uuid.UUID `json:"uuid"`
+	ShortURL    string    `json:"short_url"`
+	OriginalURL string    `json:"original_url"`
 }

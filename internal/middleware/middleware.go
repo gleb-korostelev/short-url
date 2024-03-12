@@ -30,7 +30,9 @@ func LoggingMiddleware(next http.HandlerFunc, logger *zap.Logger) http.HandlerFu
 
 func GzipCompressMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") &&
+			(strings.Contains(r.Header.Get("Content-Encoding"), "application/json") ||
+				strings.Contains(r.Header.Get("Content-Encoding"), "text/html")) {
 			gzWriter := gzip.NewWriter(w)
 			defer gzWriter.Close()
 
