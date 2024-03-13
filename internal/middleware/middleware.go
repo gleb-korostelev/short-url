@@ -30,14 +30,8 @@ func LoggingMiddleware(next http.HandlerFunc, logger *zap.Logger) http.HandlerFu
 
 func GzipCompressMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") &&
-			(strings.Contains(r.Header.Get("Content-Encoding"), "application/json") ||
-				strings.Contains(r.Header.Get("Content-Encoding"), "text/html")) {
-			gzWriter := gzip.NewWriter(w)
-			defer gzWriter.Close()
-
-			w.Header().Set("Content-Encoding", "gzip")
-			next.ServeHTTP(gzipResponseWriter{Writer: gzWriter, ResponseWriter: w}, r)
+		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			next.ServeHTTP(&gzipResponseWriter{ResponseWriter: w, Writer: w}, r)
 		} else {
 			next.ServeHTTP(w, r)
 		}
@@ -83,8 +77,30 @@ func (w *responseWriter) Write(b []byte) (int, error) {
 type gzipResponseWriter struct {
 	io.Writer
 	http.ResponseWriter
+	hasWrittenHeader bool
 }
 
-func (w gzipResponseWriter) Write(b []byte) (int, error) {
+func (w *gzipResponseWriter) WriteHeader(statusCode int) {
+	if w.hasWrittenHeader {
+		return
+	}
+	w.hasWrittenHeader = true
+	w.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (w *gzipResponseWriter) Write(b []byte) (int, error) {
+	if !w.hasWrittenHeader {
+		contentType := w.Header().Get("Content-Type")
+		if strings.HasPrefix(contentType, "application/json") || strings.HasPrefix(contentType, "text/html") {
+			w.Header().Set("Content-Encoding", "gzip")
+			w.Writer = gzip.NewWriter(w.ResponseWriter)
+			defer func() {
+				if w.Writer != nil {
+					w.Writer.(*gzip.Writer).Close()
+				}
+			}()
+		}
+		w.WriteHeader(http.StatusOK)
+	}
 	return w.Writer.Write(b)
 }
