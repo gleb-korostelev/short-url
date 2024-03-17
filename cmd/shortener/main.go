@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/db"
 	"github.com/gleb-korostelev/short-url.git/internal/service/business"
 	"github.com/gleb-korostelev/short-url.git/internal/service/router"
 	"go.uber.org/zap"
@@ -12,12 +13,13 @@ import (
 
 func main() {
 	config.ConfigInit()
-	logger, _ := zap.NewProduction()
-	r := router.RouterInit(logger)
-
 	business.LoadURLs()
+	database := db.InitDB()
+	defer database.Close()
 
-	fmt.Printf("Server will run on: %s\n", config.ServerAddr)
+	logger, _ := zap.NewProduction()
+	r := router.RouterInit(database, logger)
+
 	fmt.Printf("Base URL for shortened links: %s\n", config.BaseURL)
 
 	fmt.Println("Server is listening on ", config.ServerAddr)
