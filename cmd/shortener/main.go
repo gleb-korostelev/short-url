@@ -21,6 +21,8 @@ func main() {
 		if err != nil {
 			logger.Infof("Failed to initialize tables: %v", err)
 		}
+	} else {
+		logger.Infof("Database wasn't initialized: %v", err)
 	}
 	business.LoadURLs()
 	svc := handler.NewAPIService(database)
