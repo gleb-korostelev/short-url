@@ -29,7 +29,6 @@ func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(status)
 	fmt.Fprint(w, shortURL)
 }
