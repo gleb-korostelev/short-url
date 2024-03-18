@@ -8,7 +8,7 @@ import (
 	"github.com/gleb-korostelev/short-url.git/internal/service/business"
 )
 
-func PostShorterJSON(w http.ResponseWriter, r *http.Request) {
+func (svc *APIService) PostShorterJSON(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST method is allowed", http.StatusBadRequest)
 		return
@@ -20,9 +20,9 @@ func PostShorterJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL, err := business.CacheURL(payload.URL)
+	shortURL, err := business.CacheURL(payload.URL, svc.data)
 	if err != nil {
-		http.Error(w, "Error with saving file", http.StatusBadRequest)
+		http.Error(w, "Error with saving", http.StatusBadRequest)
 		return
 	}
 
