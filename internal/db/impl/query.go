@@ -9,20 +9,19 @@ import (
 
 func InitializeTables(db db.DatabaseI) error {
 	createTableSQL := `
-    CREATE TABLE IF NOT EXISTS shortened_urlss (
+    CREATE TABLE IF NOT EXISTS shortened_urls (
         id SERIAL PRIMARY KEY,
 		uuid UUID NOT NULL UNIQUE,
         short_url VARCHAR(255) UNIQUE NOT NULL,
-        original_url VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-		CONSTRAINT original_url_unique UNIQUE (original_url)
+        original_url VARCHAR(255) NOT NULL UNIQUE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );`
 	_, err := db.Exec(context.Background(), createTableSQL)
 	return err
 }
 
 func CreateShortURL(db db.DatabaseI, uuid, shortURL, originalURL string) error {
-	sql := `INSERT INTO shortened_urlss (uuid, short_url, original_url) VALUES ($1, $2, $3) ON CONFLICT (original_url) DO NOTHING`
+	sql := `INSERT INTO shortened_urls (uuid, short_url, original_url) VALUES ($1, $2, $3) ON CONFLICT (original_url) DO NOTHING`
 	cmdTag, err := db.Exec(context.Background(), sql, uuid, shortURL, originalURL)
 	if err != nil {
 		return err
@@ -35,7 +34,7 @@ func CreateShortURL(db db.DatabaseI, uuid, shortURL, originalURL string) error {
 
 func GetOriginalURL(db db.DatabaseI, shortURL string) (string, error) {
 	var originalURL string
-	sql := `SELECT original_url FROM shortened_urlss WHERE short_url = $1`
+	sql := `SELECT original_url FROM shortened_urls WHERE short_url = $1`
 	err := db.QueryRow(context.Background(), sql, shortURL).Scan(&originalURL)
 	if err != nil {
 		return "", err
@@ -45,7 +44,7 @@ func GetOriginalURL(db db.DatabaseI, shortURL string) (string, error) {
 
 func GetOriginalURLByUUID(db db.DatabaseI, uuid string) (string, error) {
 	var originalURL string
-	sql := `SELECT original_url FROM shortened_urlss WHERE uuid = $1`
+	sql := `SELECT original_url FROM shortened_urls WHERE uuid = $1`
 	err := db.QueryRow(context.Background(), sql, uuid).Scan(&originalURL)
 	if err != nil {
 		return "", err
@@ -55,7 +54,7 @@ func GetOriginalURLByUUID(db db.DatabaseI, uuid string) (string, error) {
 
 func GetShortURLByOriginalURL(db db.DatabaseI, originalURL string) (string, error) {
 	var shortURL string
-	sql := `SELECT short_url FROM shortened_urlss WHERE original_url = $1`
+	sql := `SELECT short_url FROM shortened_urls WHERE original_url = $1`
 	err := db.QueryRow(context.Background(), sql, originalURL).Scan(&shortURL)
 	if err != nil {
 		return "", err

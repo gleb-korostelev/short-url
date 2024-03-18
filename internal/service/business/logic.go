@@ -57,7 +57,7 @@ func CacheURL(w http.ResponseWriter, originalURL string, data db.DatabaseI) (str
 	} else if config.BaseFilePath != "" {
 		err := SaveURLs(save)
 		if err != nil {
-			http.Error(w, "Error with saving", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
 			return "", err
 		}
 	}

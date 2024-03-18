@@ -32,8 +32,8 @@ func main() {
 
 	logger.Infof("Base URL for shortened links: %s", config.BaseURL)
 
-	logger.Infof("Server is listening on ", config.ServerAddr)
+	logger.Infof("Server is listening on: %s", config.ServerAddr)
 	if err := http.ListenAndServe(config.ServerAddr, r); err != nil {
-		logger.Fatal("Error starting server:", zap.Error(err))
+		logger.Fatal("Error starting server: %v", zap.Error(err))
 	}
 }
