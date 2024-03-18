@@ -7,4 +7,5 @@ type APIServiceI interface {
 	Ping(w http.ResponseWriter, r *http.Request)
 	PostShorter(w http.ResponseWriter, r *http.Request)
 	PostShorterJSON(w http.ResponseWriter, r *http.Request)
+	ShortenBatchHandler(w http.ResponseWriter, r *http.Request)
 }
