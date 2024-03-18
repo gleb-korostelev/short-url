@@ -14,12 +14,13 @@ func (svc *APIService) PostShorterJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+
 	var payload models.URLPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
 	shortURL, status, err := business.CacheURL(payload.URL, svc.data)
 	if err != nil {
 		http.Error(w, "Error with saving", http.StatusBadRequest)
@@ -27,7 +28,6 @@ func (svc *APIService) PostShorterJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := models.ShortURLResponse{Result: shortURL}
-	// w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(response)
 }

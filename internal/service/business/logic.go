@@ -45,13 +45,10 @@ func CacheURL(originalURL string, data db.DatabaseI) (string, int, error) {
 			if errors.Is(err, config.ErrExists) {
 				existingShortURL, err := impl.GetShortURLByOriginalURL(data, save.OriginalURL)
 				if err != nil {
-					// w.WriteHeader(http.StatusInternalServerError)
 					return "", http.StatusInternalServerError, err
 				}
-				// w.WriteHeader(http.StatusConflict)
 				return config.BaseURL + "/" + existingShortURL, http.StatusConflict, nil
 			}
-			// w.WriteHeader(http.StatusInternalServerError)
 			return "", http.StatusInternalServerError, err
 		}
 	} else if config.BaseFilePath != "" {
