@@ -1,22 +1,37 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/db/impl"
+	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/gleb-korostelev/short-url.git/internal/service/handler"
 	"github.com/gleb-korostelev/short-url.git/internal/service/router"
+	"github.com/gleb-korostelev/short-url.git/tools/logger"
+	"go.uber.org/zap"
 )
 
 func main() {
 	config.ConfigInit()
-	r := router.RouterInit()
+	database, err := impl.InitDB()
+	if err == nil {
+		defer database.Close()
+		err := impl.InitializeTables(database)
+		if err != nil {
+			logger.Infof("Failed to initialize tables: %v", err)
+		}
+	}
+	business.LoadURLs()
+	svc := handler.NewAPIService(database)
 
-	fmt.Printf("Server will run on: %s\n", config.ServerAddr)
-	fmt.Printf("Base URL for shortened links: %s\n", config.BaseURL)
+	log, _ := zap.NewProduction()
+	r := router.RouterInit(svc, log)
 
-	fmt.Println("Server is listening on ", config.ServerAddr)
+	logger.Infof("Base URL for shortened links: %s\n", config.BaseURL)
+
+	logger.Infof("Server is listening on ", config.ServerAddr)
 	if err := http.ListenAndServe(config.ServerAddr, r); err != nil {
-		fmt.Printf("Error starting server: %s\n", err)
+		logger.Fatal("Error starting server:", zap.Error(err))
 	}
 }
