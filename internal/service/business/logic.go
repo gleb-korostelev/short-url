@@ -49,7 +49,7 @@ func CacheURL(w http.ResponseWriter, originalURL string, data db.DatabaseI) (str
 					return "", err
 				}
 				w.WriteHeader(http.StatusConflict)
-				return config.BaseURL + "/" + existingShortURL, err
+				return config.BaseURL + "/" + existingShortURL, nil
 			}
 			w.WriteHeader(http.StatusInternalServerError)
 			return "", err
