@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -12,6 +13,10 @@ const (
 	DefaultServerAddress = "localhost:8080"
 	DefaultBaseURL       = "http://localhost:8080"
 	// DefaultFilePath      = "./tmp/short-url-db.json"
+)
+
+var (
+	ErrExists = errors.New("URL already exists")
 )
 
 var (

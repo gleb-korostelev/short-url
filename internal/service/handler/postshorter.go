@@ -22,7 +22,7 @@ func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
 
 	originalURL := string(body)
 
-	shortURL, err := business.CacheURL(originalURL, svc.data)
+	shortURL, _ := business.CacheURL(w, originalURL, svc.data)
 	if err != nil {
 		http.Error(w, "Error with saving file", http.StatusBadRequest)
 		return

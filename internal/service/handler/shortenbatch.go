@@ -22,8 +22,9 @@ func (svc *APIService) ShortenBatchHandler(w http.ResponseWriter, r *http.Reques
 	}
 	var respItems []models.ShortenBatchResponseItem
 	for _, item := range reqItems {
-		shortURL, err := business.CacheURL(item.OriginalURL, svc.data)
+		shortURL, err := business.OldCacheURL(item.OriginalURL, svc.data)
 		if err != nil {
+			http.Error(w, "Error with saving", http.StatusBadRequest)
 			return
 		}
 		respItems = append(respItems, models.ShortenBatchResponseItem{

@@ -20,7 +20,7 @@ func (svc *APIService) PostShorterJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL, err := business.CacheURL(payload.URL, svc.data)
+	shortURL, err := business.CacheURL(w, payload.URL, svc.data)
 	if err != nil {
 		http.Error(w, "Error with saving", http.StatusBadRequest)
 		return

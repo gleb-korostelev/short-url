@@ -10,6 +10,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	pgx "github.com/jackc/pgx/v5"
+	pgconn "github.com/jackc/pgx/v5/pgconn"
 )
 
 // MockDatabaseI is a mock of DatabaseI interface.
@@ -50,15 +51,16 @@ func (mr *MockDatabaseIMockRecorder) Close() *gomock.Call {
 }
 
 // Exec mocks base method.
-func (m *MockDatabaseI) Exec(ctx context.Context, query string, args ...interface{}) error {
+func (m *MockDatabaseI) Exec(ctx context.Context, query string, args ...interface{}) (pgconn.CommandTag, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, query}
 	for _, a := range args {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Exec", varargs...)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(pgconn.CommandTag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Exec indicates an expected call of Exec.

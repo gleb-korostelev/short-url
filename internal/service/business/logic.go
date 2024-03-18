@@ -3,7 +3,9 @@ package business
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"math/rand"
+	"net/http"
 	"os"
 
 	"github.com/gleb-korostelev/short-url.git/internal/cache"
@@ -23,7 +25,7 @@ func GenerateShortPath() string {
 	return string(b)
 }
 
-func CacheURL(originalURL string, data db.DatabaseI) (string, error) {
+func CacheURL(w http.ResponseWriter, originalURL string, data db.DatabaseI) (string, error) {
 	cache.Mu.RLock()
 	defer cache.Mu.RUnlock()
 
@@ -37,9 +39,45 @@ func CacheURL(originalURL string, data db.DatabaseI) (string, error) {
 	save.ShortURL = shortURL
 	save.UUID = uuid.New()
 
-	// logger.Infof("OriginalURL: ", save.OriginalURL)
-	// logger.Infof("ShortURL: ", save.ShortURL)
-	// logger.Infof("UUID: ", save.UUID)
+	if config.DBDSN != "" {
+		err := impl.CreateShortURL(data, save.UUID.String(), save.ShortURL, save.OriginalURL)
+		if err != nil {
+			if errors.Is(err, config.ErrExists) {
+				existingShortURL, err := impl.GetShortURLByOriginalURL(data, save.OriginalURL)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return "", err
+				}
+				w.WriteHeader(http.StatusConflict)
+				return config.BaseURL + "/" + existingShortURL, err
+			}
+			w.WriteHeader(http.StatusInternalServerError)
+			return "", err
+		}
+	} else if config.BaseFilePath != "" {
+		err := SaveURLs(save)
+		if err != nil {
+			http.Error(w, "Error with saving", http.StatusBadRequest)
+			return "", err
+		}
+	}
+	cache.Cache[shortURL] = originalURL
+	return config.BaseURL + "/" + shortURL, nil
+}
+
+func OldCacheURL(originalURL string, data db.DatabaseI) (string, error) {
+	cache.Mu.RLock()
+	defer cache.Mu.RUnlock()
+
+	shortURL := GenerateShortPath()
+	for _, exists := cache.Cache[shortURL]; exists; {
+		shortURL = GenerateShortPath()
+	}
+
+	var save models.URLData
+	save.OriginalURL = originalURL
+	save.ShortURL = shortURL
+	save.UUID = uuid.New()
 
 	if config.DBDSN != "" {
 		err := impl.CreateShortURL(data, save.UUID.String(), save.ShortURL, save.OriginalURL)
