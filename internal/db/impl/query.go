@@ -15,6 +15,7 @@ func InitializeTables(db db.DatabaseI) error {
         short_url VARCHAR(255) UNIQUE NOT NULL,
         original_url VARCHAR(255) NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+		CONSTRAINT original_url_unique UNIQUE (original_url)
     );`
 	_, err := db.Exec(context.Background(), createTableSQL)
 	return err

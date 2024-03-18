@@ -28,7 +28,7 @@ func main() {
 	log, _ := zap.NewProduction()
 	r := router.RouterInit(svc, log)
 
-	logger.Infof("Base URL for shortened links: %s\n", config.BaseURL)
+	logger.Infof("Base URL for shortened links: %s", config.BaseURL)
 
 	logger.Infof("Server is listening on ", config.ServerAddr)
 	if err := http.ListenAndServe(config.ServerAddr, r); err != nil {

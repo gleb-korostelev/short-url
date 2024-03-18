@@ -132,7 +132,7 @@ func SaveURLs(save models.URLData) error {
 }
 
 func LoadURLs() error {
-	if config.BaseFilePath != "" && config.DBDSN == "" {
+	if config.DBDSN == "" {
 		file, err := os.Open(config.BaseFilePath)
 		if err != nil {
 			return err
