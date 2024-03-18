@@ -13,16 +13,15 @@ type Database struct {
 	Conn *pgx.Conn
 }
 
-func InitDB() db.DatabaseI {
+func InitDB() (db.DatabaseI, error) {
 	сonnection, err := pgx.Connect(context.Background(), config.DBDSN)
 	if err != nil {
-		logger.Fatalf("Unable to connect to database: %v\n", err)
-		return nil
+		logger.Infof("Unable to connect to database: %v\n", err)
+		return nil, err
 	}
 	logger.Infof("Connected to database.")
 	data := &Database{Conn: сonnection}
-	InitializeTables(data)
-	return data
+	return data, nil
 }
 
 func (db *Database) GetConn(ctx context.Context) *pgx.Conn {

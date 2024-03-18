@@ -37,25 +37,26 @@ func CacheURL(originalURL string, data db.DatabaseI) (string, error) {
 	save.ShortURL = shortURL
 	save.UUID = uuid.New()
 
-	logger.Infof("OriginalURL: ", save.OriginalURL)
-	logger.Infof("ShortURL: ", save.ShortURL)
-	logger.Infof("UUID: ", save.UUID)
+	// logger.Infof("OriginalURL: ", save.OriginalURL)
+	// logger.Infof("ShortURL: ", save.ShortURL)
+	// logger.Infof("UUID: ", save.UUID)
 
 	if config.DBDSN != "" {
 		err := impl.CreateShortURL(data, save.UUID.String(), save.ShortURL, save.OriginalURL)
 		if err != nil {
-			logger.Fatalf("Error with saving in database %v", err)
+			logger.Errorf("Error with saving in database %v", err)
+			return "", err
 		}
 	} else if config.BaseFilePath != "" {
 		err := SaveURLs(save)
 		if err != nil {
-			logger.Fatalf("Error with saving in file %v", err)
+			logger.Errorf("Error with saving in file %v", err)
 			return "", err
 		}
 	} else {
+		logger.Infof("HERE")
 		cache.Cache[shortURL] = originalURL
 	}
-
 	return config.BaseURL + "/" + shortURL, nil
 }
 
@@ -66,7 +67,7 @@ func GetOriginalURL(data db.DatabaseI, shortURL string) (string, bool) {
 	if config.DBDSN != "" {
 		originalURL, err := impl.GetOriginalURL(data, shortURL)
 		if err != nil {
-			logger.Fatalf("Error in getting original URL from database %v", err)
+			logger.Errorf("Error in getting original URL from database %v", err)
 			return "", false
 		}
 		return originalURL, true

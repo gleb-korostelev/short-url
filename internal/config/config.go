@@ -11,7 +11,7 @@ const (
 	Length               = 8
 	DefaultServerAddress = "localhost:8080"
 	DefaultBaseURL       = "http://localhost:8080"
-	DefaultFilePath      = "./tmp/short-url-db.json"
+	// DefaultFilePath      = "./tmp/short-url-db.json"
 )
 
 var (
@@ -25,7 +25,7 @@ func ConfigInit() {
 
 	flag.StringVar(&ServerAddr, "a", DefaultServerAddress, "address to run HTTP server on")
 	flag.StringVar(&BaseURL, "b", DefaultBaseURL, "base address for the resulting shortened URLs")
-	flag.StringVar(&BaseFilePath, "f", DefaultFilePath, "base file path to save URLs")
+	flag.StringVar(&BaseFilePath, "f", "", "base file path to save URLs")
 	flag.StringVar(&DBDSN, "d", "", "base file path to save URLs")
 
 	flag.Parse()

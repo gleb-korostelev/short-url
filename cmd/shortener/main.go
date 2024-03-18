@@ -14,14 +14,15 @@ import (
 
 func main() {
 	config.ConfigInit()
-	database := impl.InitDB()
-	defer database.Close()
-	err := impl.InitializeTables(database)
-	if err != nil {
-		logger.Fatalf("Failed to initialize tables: %v", err)
+	database, err := impl.InitDB()
+	if err == nil {
+		defer database.Close()
+		err := impl.InitializeTables(database)
+		if err != nil {
+			logger.Infof("Failed to initialize tables: %v", err)
+		}
 	}
 	business.LoadURLs()
-
 	svc := handler.NewAPIService(database)
 
 	log, _ := zap.NewProduction()
