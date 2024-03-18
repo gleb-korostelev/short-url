@@ -25,7 +25,7 @@ func GenerateShortPath() string {
 	return string(b)
 }
 
-func CacheURL(w http.ResponseWriter, originalURL string, data db.DatabaseI) (string, error) {
+func CacheURL(originalURL string, data db.DatabaseI) (string, int, error) {
 	cache.Mu.RLock()
 	defer cache.Mu.RUnlock()
 
@@ -45,24 +45,24 @@ func CacheURL(w http.ResponseWriter, originalURL string, data db.DatabaseI) (str
 			if errors.Is(err, config.ErrExists) {
 				existingShortURL, err := impl.GetShortURLByOriginalURL(data, save.OriginalURL)
 				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					return "", err
+					// w.WriteHeader(http.StatusInternalServerError)
+					return "", http.StatusInternalServerError, err
 				}
-				w.WriteHeader(http.StatusConflict)
-				return config.BaseURL + "/" + existingShortURL, nil
+				// w.WriteHeader(http.StatusConflict)
+				return config.BaseURL + "/" + existingShortURL, http.StatusConflict, nil
 			}
-			w.WriteHeader(http.StatusInternalServerError)
-			return "", err
+			// w.WriteHeader(http.StatusInternalServerError)
+			return "", http.StatusInternalServerError, err
 		}
 	} else if config.BaseFilePath != "" {
 		err := SaveURLs(save)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return "", err
+			// w.WriteHeader(http.StatusBadRequest)
+			return "", http.StatusBadRequest, err
 		}
 	}
 	cache.Cache[shortURL] = originalURL
-	return config.BaseURL + "/" + shortURL, nil
+	return config.BaseURL + "/" + shortURL, http.StatusCreated, nil
 }
 
 func OldCacheURL(originalURL string, data db.DatabaseI) (string, error) {
