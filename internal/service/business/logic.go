@@ -53,10 +53,8 @@ func CacheURL(originalURL string, data db.DatabaseI) (string, error) {
 			logger.Errorf("Error with saving in file %v", err)
 			return "", err
 		}
-	} else {
-		logger.Infof("HERE")
-		cache.Cache[shortURL] = originalURL
 	}
+	cache.Cache[shortURL] = originalURL
 	return config.BaseURL + "/" + shortURL, nil
 }
 
