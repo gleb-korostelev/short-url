@@ -16,7 +16,6 @@ func main() {
 	business.LoadURLs()
 	database := db.InitDB()
 	defer database.Close()
-
 	logger, _ := zap.NewProduction()
 	r := router.RouterInit(database, logger)
 
