@@ -8,15 +8,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func GetOriginal(w http.ResponseWriter, r *http.Request) {
-
+func (svc *APIService) GetOriginal(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		http.Error(w, "This URL doesn't exist", http.StatusBadRequest)
 		return
 	}
 	cache.Mu.RLock()
-	originalURL, exists := business.GetOriginalURL(id)
+	originalURL, exists := business.GetOriginalURL(svc.data, id)
 	cache.Mu.RUnlock()
 
 	if !exists {

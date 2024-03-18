@@ -4,15 +4,23 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
+	"github.com/golang/mock/gomock"
 )
 
 func TestPostShorterJSON(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockdb := mock_db.NewMockDatabaseI(ctrl)
+
+	svc := NewAPIService(mockdb)
 
 	t.Run("Unsupported Method", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/api/shorten", nil)
 		responseRecorder := httptest.NewRecorder()
 
-		PostShorterJSON(responseRecorder, request)
+		svc.PostShorterJSON(responseRecorder, request)
 
 		if status := responseRecorder.Code; status != http.StatusBadRequest {
 			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusBadRequest)
@@ -23,7 +31,7 @@ func TestPostShorterJSON(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/test", nil)
 		responseRecorder := httptest.NewRecorder()
 
-		GetOriginal(responseRecorder, request)
+		svc.GetOriginal(responseRecorder, request)
 
 		if status := responseRecorder.Code; status != http.StatusBadRequest {
 			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusBadRequest)
