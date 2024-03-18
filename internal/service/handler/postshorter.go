@@ -22,7 +22,11 @@ func PostShorter(w http.ResponseWriter, r *http.Request) {
 
 	originalURL := string(body)
 
-	shortURL := business.CacheURL(originalURL)
+	shortURL, err := business.CacheURL(originalURL)
+	if err != nil {
+		http.Error(w, "Error with saving file", http.StatusBadRequest)
+		return
+	}
 
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
