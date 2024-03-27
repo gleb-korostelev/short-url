@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gleb-korostelev/short-url.git/internal/storage/repository"
 	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
 	"github.com/golang/mock/gomock"
 )
@@ -13,8 +14,8 @@ func TestPostShorter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockdb := mock_db.NewMockDatabaseI(ctrl)
-
-	svc := NewAPIService(mockdb)
+	store := repository.NewDbStorage(mockdb)
+	svc := NewAPIService(store)
 
 	t.Run("Unsupported Method", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/", nil)

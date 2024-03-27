@@ -7,12 +7,11 @@ import (
 )
 
 func (svc *APIService) Ping(w http.ResponseWriter, r *http.Request) {
-	err := svc.data.Ping(context.Background())
+	status, err := svc.store.Ping(context.Background())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "Failed to connect to the database")
+		w.WriteHeader(status)
+		fmt.Fprintln(w, err)
 		return
 	}
-
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 }

@@ -1,11 +1,10 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
-
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
 )
 
 func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
@@ -23,12 +22,11 @@ func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
 
 	originalURL := string(body)
 
-	shortURL, status, err := business.CacheURL(originalURL, svc.data)
+	shortURL, status, err := svc.store.SaveUniqueURL(context.Background(), originalURL)
+	w.WriteHeader(status)
 	if err != nil {
 		http.Error(w, "Error with saving file", http.StatusBadRequest)
 		return
 	}
-
-	w.WriteHeader(status)
 	fmt.Fprint(w, shortURL)
 }

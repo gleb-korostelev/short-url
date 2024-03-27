@@ -1,11 +1,11 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/gleb-korostelev/short-url.git/internal/models"
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
 )
 
 func (svc *APIService) ShortenBatchHandler(w http.ResponseWriter, r *http.Request) {
@@ -22,10 +22,11 @@ func (svc *APIService) ShortenBatchHandler(w http.ResponseWriter, r *http.Reques
 	}
 	var respItems []models.ShortenBatchResponseItem
 	for _, item := range reqItems {
-		shortURL, err := business.OldCacheURL(item.OriginalURL, svc.data)
+		shortURL, err := svc.store.SaveURL(context.Background(), item.OriginalURL)
+		//business.OldCacheURL(item.OriginalURL, svc.data)
 		if err != nil {
 			http.Error(w, "Error with saving", http.StatusBadRequest)
-			return
+			break
 		}
 		respItems = append(respItems, models.ShortenBatchResponseItem{
 			CorrelationID: item.CorrelationID,

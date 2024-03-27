@@ -1,11 +1,11 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/gleb-korostelev/short-url.git/internal/models"
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
 )
 
 func (svc *APIService) PostShorterJSON(w http.ResponseWriter, r *http.Request) {
@@ -21,13 +21,15 @@ func (svc *APIService) PostShorterJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	shortURL, status, err := business.CacheURL(payload.URL, svc.data)
+	// shortURL, status, err := business.CacheURL(payload.URL, svc.data)
+
+	shortURL, status, err := svc.store.SaveUniqueURL(context.Background(), payload.URL)
+	w.WriteHeader(status)
 	if err != nil {
 		http.Error(w, "Error with saving", http.StatusBadRequest)
 		return
 	}
 
 	response := models.ShortURLResponse{Result: shortURL}
-	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(response)
 }

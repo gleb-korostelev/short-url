@@ -22,6 +22,12 @@ func InitDB() (db.DatabaseI, error) {
 	}
 	logger.Infof("Connected to database.")
 	data := &Database{Conn: сonnection}
+
+	err = InitializeTables(data)
+	if err != nil {
+		logger.Infof("Failed to initialize tables: %v", err)
+		return nil, err
+	}
 	return data, nil
 }
 
