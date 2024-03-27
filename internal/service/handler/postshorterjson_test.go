@@ -15,7 +15,7 @@ func TestPostShorterJSON(t *testing.T) {
 	defer ctrl.Finish()
 	mockdb := mock_db.NewMockDatabaseI(ctrl)
 
-	store := repository.NewDbStorage(mockdb)
+	store := repository.NewDBStorage(mockdb)
 	svc := NewAPIService(store)
 
 	t.Run("Unsupported Method", func(t *testing.T) {

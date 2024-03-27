@@ -14,7 +14,7 @@ func TestPostShorter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockdb := mock_db.NewMockDatabaseI(ctrl)
-	store := repository.NewDbStorage(mockdb)
+	store := repository.NewDBStorage(mockdb)
 	svc := NewAPIService(store)
 
 	t.Run("Unsupported Method", func(t *testing.T) {

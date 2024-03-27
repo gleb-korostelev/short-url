@@ -18,7 +18,7 @@ type service struct {
 	data db.DatabaseI
 }
 
-func NewDbStorage(data db.DatabaseI) storage.Storage {
+func NewDBStorage(data db.DatabaseI) storage.Storage {
 	return &service{
 		data: data,
 	}

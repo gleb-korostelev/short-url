@@ -45,7 +45,7 @@ func storageInit() (storage.Storage, error) {
 			return nil, err
 		}
 		// defer database.Close()
-		store := repository.NewDbStorage(database)
+		store := repository.NewDBStorage(database)
 		logger.Info("Using database storage")
 		return store, nil
 	} else if _, err := os.Stat(config.BaseFilePath); err == nil {

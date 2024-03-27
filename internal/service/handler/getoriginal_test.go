@@ -17,7 +17,7 @@ func TestGetOriginal(t *testing.T) {
 	defer ctrl.Finish()
 	mockdb := mock_db.NewMockDatabaseI(ctrl)
 	r := chi.NewRouter()
-	store := repository.NewDbStorage(mockdb)
+	store := repository.NewDBStorage(mockdb)
 	svc := NewAPIService(store)
 	r.Get("/{id}", svc.GetOriginal)
 
