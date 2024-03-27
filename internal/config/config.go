@@ -18,7 +18,7 @@ const (
 var (
 	ErrExists    = errors.New("URL already exists")
 	ErrNotFound  = errors.New("URL doesn't exists")
-	ErrWrongMode = errors.New("Wrong, non db mode")
+	ErrWrongMode = errors.New("wrong, non db mode")
 )
 
 var (
