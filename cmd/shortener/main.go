@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gleb-korostelev/short-url.git/internal/cache"
 	"github.com/gleb-korostelev/short-url.git/internal/config"
@@ -47,12 +46,11 @@ func storageInit() (storage.Storage, error) {
 		store := repository.NewDBStorage(database)
 		logger.Infof("Using database storage")
 		return store, nil
-	} else if _, err := os.Stat(config.BaseFilePath); err == nil {
+	} else if config.BaseFilePath != "" {
 		store := filecache.NewFileStorage(config.BaseFilePath)
 		logger.Infof("Using file storage with base file path %s", config.BaseFilePath)
 		return store, nil
 	} else {
-		logger.Infof("inmemory file path %s", config.BaseFilePath)
 		store := inmemory.NewMemoryStorage(cache.Cache, &cache.Mu)
 		logger.Infof("Using inmemory storage")
 		return store, nil
