@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -15,9 +16,16 @@ const (
 )
 
 var (
+	ErrExists    = errors.New("URL already exists")
+	ErrNotFound  = errors.New("URL doesn't exists")
+	ErrWrongMode = errors.New("wrong, non db mode")
+)
+
+var (
 	ServerAddr   string
 	BaseURL      string
 	BaseFilePath string
+	DBDSN        string
 )
 
 func ConfigInit() {
@@ -25,12 +33,14 @@ func ConfigInit() {
 	flag.StringVar(&ServerAddr, "a", DefaultServerAddress, "address to run HTTP server on")
 	flag.StringVar(&BaseURL, "b", DefaultBaseURL, "base address for the resulting shortened URLs")
 	flag.StringVar(&BaseFilePath, "f", DefaultFilePath, "base file path to save URLs")
+	flag.StringVar(&DBDSN, "d", "", "base file path to save URLs")
 
 	flag.Parse()
 
 	ServerAddr = GetEnv("SERVER_ADDRESS", ServerAddr)
 	BaseURL = GetEnv("BASE_URL", BaseURL)
 	BaseFilePath = GetEnv("FILE_STORAGE_PATH", BaseFilePath)
+	DBDSN = GetEnv("DATABASE_DSN", DBDSN)
 }
 
 func GetEnv(key, fallback string) string {
