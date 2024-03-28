@@ -44,17 +44,17 @@ func storageInit() (storage.Storage, error) {
 		if err != nil {
 			return nil, err
 		}
-		// defer database.Close()
 		store := repository.NewDBStorage(database)
-		logger.Info("Using database storage")
+		logger.Infof("Using database storage")
 		return store, nil
 	} else if _, err := os.Stat(config.BaseFilePath); err == nil {
 		store := filecache.NewFileStorage(config.BaseFilePath)
-		logger.Info("Using file storage")
+		logger.Infof("Using file storage with base file path %s", config.BaseFilePath)
 		return store, nil
 	} else {
+		logger.Infof("inmemory file path %s", config.BaseFilePath)
 		store := inmemory.NewMemoryStorage(cache.Cache, &cache.Mu)
-		logger.Info("Using inmemory storage")
+		logger.Infof("Using inmemory storage")
 		return store, nil
 	}
 }
