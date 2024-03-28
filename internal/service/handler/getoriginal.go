@@ -13,9 +13,6 @@ func (svc *APIService) GetOriginal(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "This URL doesn't exist", http.StatusBadRequest)
 		return
 	}
-	// cache.Mu.RLock()
-	// originalURL, exists := business.GetOriginalURL(svc.data, id)
-	// cache.Mu.RUnlock()
 
 	originalURL, err := svc.store.GetOriginalLink(context.Background(), id)
 

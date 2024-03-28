@@ -21,7 +21,6 @@ func (svc *APIService) PostShorterJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	// shortURL, status, err := business.CacheURL(payload.URL, svc.data)
 
 	shortURL, status, err := svc.store.SaveUniqueURL(context.Background(), payload.URL)
 	w.WriteHeader(status)

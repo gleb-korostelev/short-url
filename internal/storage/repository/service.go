@@ -7,7 +7,7 @@ import (
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/db"
-	"github.com/gleb-korostelev/short-url.git/internal/db/impl"
+	"github.com/gleb-korostelev/short-url.git/internal/db/dbimpl"
 	"github.com/gleb-korostelev/short-url.git/internal/service/business"
 	"github.com/gleb-korostelev/short-url.git/internal/storage"
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
@@ -28,10 +28,10 @@ func (s *service) SaveUniqueURL(ctx context.Context, originalURL string) (string
 	shortURL := business.GenerateShortPath()
 
 	uuid := uuid.New()
-	err := impl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
+	err := dbimpl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
 	if err != nil {
 		if errors.Is(err, config.ErrExists) {
-			existingShortURL, err := impl.GetShortURLByOriginalURL(s.data, originalURL)
+			existingShortURL, err := dbimpl.GetShortURLByOriginalURL(s.data, originalURL)
 			if err != nil {
 				return "", http.StatusInternalServerError, err
 			}
@@ -46,7 +46,7 @@ func (s *service) SaveURL(ctx context.Context, originalURL string) (string, erro
 	shortURL := business.GenerateShortPath()
 
 	uuid := uuid.New()
-	err := impl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
+	err := dbimpl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
 	if err != nil {
 		logger.Errorf("Error with saving in database %v", err)
 		return "", err
@@ -55,7 +55,7 @@ func (s *service) SaveURL(ctx context.Context, originalURL string) (string, erro
 }
 
 func (s *service) GetOriginalLink(ctx context.Context, shortURL string) (string, error) {
-	originalURL, err := impl.GetOriginalURL(s.data, shortURL)
+	originalURL, err := dbimpl.GetOriginalURL(s.data, shortURL)
 	if err != nil {
 		logger.Errorf("Error in getting original URL from database %v", err)
 		return "", err

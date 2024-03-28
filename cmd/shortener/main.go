@@ -5,7 +5,7 @@ import (
 
 	"github.com/gleb-korostelev/short-url.git/internal/cache"
 	"github.com/gleb-korostelev/short-url.git/internal/config"
-	"github.com/gleb-korostelev/short-url.git/internal/db/impl"
+	"github.com/gleb-korostelev/short-url.git/internal/db/dbimpl"
 	"github.com/gleb-korostelev/short-url.git/internal/service/handler"
 	"github.com/gleb-korostelev/short-url.git/internal/service/router"
 	"github.com/gleb-korostelev/short-url.git/internal/storage"
@@ -39,7 +39,7 @@ func main() {
 
 func storageInit() (storage.Storage, error) {
 	if config.DBDSN != "" {
-		database, err := impl.InitDB()
+		database, err := dbimpl.InitDB()
 		if err != nil {
 			return nil, err
 		}
