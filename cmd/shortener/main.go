@@ -51,7 +51,7 @@ func storageInit() (storage.Storage, error) {
 		logger.Infof("Using file storage with base file path %s", config.BaseFilePath)
 		return store, nil
 	} else {
-		store := inmemory.NewMemoryStorage(cache.Cache, &cache.Mu)
+		store := inmemory.NewMemoryStorage(cache.Cache)
 		logger.Infof("Using inmemory storage")
 		return store, nil
 	}

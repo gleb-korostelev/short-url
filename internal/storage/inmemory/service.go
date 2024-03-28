@@ -13,13 +13,12 @@ import (
 
 type service struct {
 	cache map[string]string
-	mu    *sync.RWMutex
+	mu    sync.RWMutex
 }
 
-func NewMemoryStorage(cache map[string]string, mut *sync.RWMutex) storage.Storage {
+func NewMemoryStorage(cache map[string]string) storage.Storage {
 	return &service{
 		cache: cache,
-		mu:    mut,
 	}
 }
 
