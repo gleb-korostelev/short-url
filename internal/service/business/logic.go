@@ -9,7 +9,6 @@ import (
 	"github.com/gleb-korostelev/short-url.git/internal/cache"
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/models"
-	"github.com/google/uuid"
 )
 
 func GenerateShortPath() string {
@@ -20,42 +19,7 @@ func GenerateShortPath() string {
 	return string(b)
 }
 
-func CacheURL(originalURL string) (string, error) {
-	cache.Mu.RLock()
-	defer cache.Mu.RUnlock()
-
-	shortURL := GenerateShortPath()
-	for _, exists := cache.Cache[shortURL]; exists; {
-		shortURL = GenerateShortPath()
-	}
-	cache.Cache[shortURL] = originalURL
-
-	var save models.URLData
-	save.OriginalURL = originalURL
-	save.ShortURL = shortURL
-	save.UUID = uuid.New()
-	// save.UUID = fmt.Sprint(len(cache.Cache))
-
-	err := SaveURLs(save)
-	if err != nil {
-		return "", err
-	}
-
-	return config.BaseURL + "/" + shortURL, nil
-}
-
-func GetOriginalURL(shortURL string) (string, bool) {
-	cache.Mu.RLock()
-	defer cache.Mu.RUnlock()
-
-	originalURL, exists := cache.Cache[shortURL]
-	return originalURL, exists
-}
-
 func SaveURLs(save models.URLData) error {
-	if config.BaseFilePath == "" {
-		return nil
-	}
 	file, err := os.OpenFile(config.BaseFilePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		return err
@@ -74,13 +38,10 @@ func SaveURLs(save models.URLData) error {
 	return writer.Flush()
 }
 
-func LoadURLs() error {
-	if config.BaseFilePath == "" {
-		return nil
-	}
-	file, err := os.Open(config.BaseFilePath)
+func LoadURLs(path string, shortURL string) (string, error) {
+	file, err := os.Open(path)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer file.Close()
 
@@ -88,13 +49,12 @@ func LoadURLs() error {
 	for scanner.Scan() {
 		var urlData models.URLData
 		if err := json.Unmarshal([]byte(scanner.Text()), &urlData); err != nil {
-			return err
+			return "", err
 		}
 		cache.Cache[urlData.ShortURL] = urlData.OriginalURL
 	}
 	if err := scanner.Err(); err != nil {
-		return err
+		return "", err
 	}
-
-	return nil
+	return cache.Cache[shortURL], nil
 }
