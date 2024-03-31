@@ -61,7 +61,7 @@ func LoadURLs(path string, shortURL string) (string, error) {
 	if err := scanner.Err(); err != nil {
 		return "", err
 	}
-	return "", nil
+	return "", config.ErrNotFound
 }
 
 func LoadUserURLs(path string, userID string) ([]models.AllUserURL, error) {
