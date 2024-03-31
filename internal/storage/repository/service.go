@@ -55,7 +55,7 @@ func (s *service) SaveURL(ctx context.Context, originalURL string, userID string
 		logger.Errorf("Error with parsing userId in database %v", err)
 		return "", err
 	}
-	err = dbimpl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
+	err = dbimpl.CreateNonUniqueShortURL(s.data, uuid.String(), shortURL, originalURL)
 	if err != nil {
 		logger.Errorf("Error with saving in database %v", err)
 		return "", err

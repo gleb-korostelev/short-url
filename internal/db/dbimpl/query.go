@@ -12,17 +12,40 @@ func InitializeTables(db db.DatabaseI) error {
 	createTableSQL := `
     CREATE TABLE IF NOT EXISTS shortened_urls (
         id SERIAL PRIMARY KEY,
-		uuid UUID NOT NULL UNIQUE,
+		user_id UUID NOT NULL,
         short_url VARCHAR(255) UNIQUE NOT NULL,
         original_url VARCHAR(255) NOT NULL UNIQUE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );`
 	_, err := db.Exec(context.Background(), createTableSQL)
+	if err != nil {
+		return err
+	}
+
+	createNonUniqueTableSQL := `
+    CREATE TABLE IF NOT EXISTS shortened_urls_nonunique (
+        id SERIAL PRIMARY KEY,
+		user_id UUID NOT NULL,
+        short_url VARCHAR(255) UNIQUE NOT NULL,
+        original_url VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );`
+	_, err = db.Exec(context.Background(), createNonUniqueTableSQL)
+
 	return err
 }
 
+func CreateNonUniqueShortURL(db db.DatabaseI, uuid, shortURL, originalURL string) error {
+	sql := `INSERT INTO shortened_urls_nonunique (user_id, short_url, original_url) VALUES ($1, $2, $3)`
+	_, err := db.Exec(context.Background(), sql, uuid, shortURL, originalURL)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func CreateShortURL(db db.DatabaseI, uuid, shortURL, originalURL string) error {
-	sql := `INSERT INTO shortened_urls (uuid, short_url, original_url) VALUES ($1, $2, $3) ON CONFLICT (original_url) DO NOTHING`
+	sql := `INSERT INTO shortened_urls (user_id, short_url, original_url) VALUES ($1, $2, $3) ON CONFLICT (original_url) DO NOTHING`
 	cmdTag, err := db.Exec(context.Background(), sql, uuid, shortURL, originalURL)
 	if err != nil {
 		return err
@@ -44,7 +67,7 @@ func GetOriginalURL(db db.DatabaseI, shortURL string) (string, error) {
 }
 
 func GetOriginalURLByUUID(db db.DatabaseI, uuid string) ([]models.AllUserURL, error) {
-	sql := `SELECT short_url, original_url FROM shortened_urls WHERE uuid = $1`
+	sql := `SELECT short_url, original_url FROM shortened_urls WHERE user_id = $1`
 	rows, err := db.Query(context.Background(), sql, uuid)
 	if err != nil {
 		return nil, err
