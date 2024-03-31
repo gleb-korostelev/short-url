@@ -32,7 +32,7 @@ var (
 	BaseURL      string
 	BaseFilePath string
 	DBDSN        string
-	JwtKeySecret = "very-very-secret-key"
+	JwtKeySecret = "very-very-secret-kez"
 )
 
 func ConfigInit() {
