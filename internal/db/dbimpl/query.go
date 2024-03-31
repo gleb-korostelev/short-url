@@ -18,7 +18,7 @@ func InitializeTables(db db.DatabaseI) error {
 		user_id UUID NOT NULL,
         short_url VARCHAR(255) UNIQUE NOT NULL,
         original_url VARCHAR(255) NOT NULL UNIQUE,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 		is_deleted BOOLEAN DEFAULT FALSE
     );`
 	_, err := db.Exec(context.Background(), createTableSQL)
