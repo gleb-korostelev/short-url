@@ -11,6 +11,7 @@ import (
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/models"
+	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -54,7 +55,7 @@ func LoadURLs(path string, shortURL string) (string, error) {
 		if err := json.Unmarshal([]byte(scanner.Text()), &urlData); err != nil {
 			return "", err
 		}
-		if urlData.ShortURL == shortURL {
+		if urlData.ShortURL == shortURL && !urlData.DeletedFlag {
 			return urlData.OriginalURL, nil
 		}
 	}
@@ -78,7 +79,7 @@ func LoadUserURLs(path string, userID string) ([]models.AllUserURL, error) {
 		if err := json.Unmarshal([]byte(scanner.Text()), &urlData); err != nil {
 			return nil, err
 		}
-		if urlData.UUID.String() == userID {
+		if urlData.UUID.String() == userID && !urlData.DeletedFlag {
 			data.OriginalURL = urlData.OriginalURL
 			data.ShortURL = config.BaseURL + "/" + urlData.ShortURL
 			urls = append(urls, data)
@@ -150,4 +151,49 @@ func GetUserIDFromCookie(r *http.Request) (string, error) {
 		return "", err
 	}
 	return claims.UserID, nil
+}
+
+func MarkURLsAsDeletedInFile(path, userID string, shortURLs []string) error {
+	file, err := os.OpenFile(config.BaseFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	writer := bufio.NewWriter(file)
+
+	for scanner.Scan() {
+		var urlData models.URLData
+		if err := json.Unmarshal([]byte(scanner.Text()), &urlData); err != nil {
+			return err
+		}
+		if urlData.UUID.String() == userID && checkURL(urlData.ShortURL, shortURLs) {
+			urlData.DeletedFlag = true
+		}
+		data, err := json.Marshal(urlData)
+		if err != nil {
+			logger.Errorf("error marshalling json: %w", err)
+			return err
+		}
+		_, err = writer.WriteString(string(data) + "\n")
+		if err != nil {
+			logger.Errorf("error writing file: %w", err)
+			return err
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	return writer.Flush()
+}
+
+func checkURL(check string, findlist []string) bool {
+	for _, find := range findlist {
+		if find == check {
+			return true
+		}
+	}
+	return false
 }

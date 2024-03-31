@@ -43,6 +43,7 @@ func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID 
 	data.ShortURL = shortURL
 	data.OriginalURL = originalURL
 	data.UUID = uuid
+	data.DeletedFlag = false
 	s.cache = append(s.cache, data)
 
 	s.mu.RLock()
@@ -69,6 +70,7 @@ func (s *service) SaveURL(ctx context.Context, originalURL string, userID string
 	data.ShortURL = shortURL
 	data.OriginalURL = originalURL
 	data.UUID = uuid
+	data.DeletedFlag = false
 	s.cache = append(s.cache, data)
 
 	s.mu.RLock()
@@ -81,6 +83,9 @@ func (s *service) GetOriginalLink(ctx context.Context, shortURL string) (string,
 	defer s.mu.RUnlock()
 	for _, info := range s.cache {
 		if info.ShortURL == shortURL {
+			if info.DeletedFlag {
+				return "", config.ErrGone
+			}
 			return info.OriginalURL, nil
 		}
 	}
@@ -104,11 +109,24 @@ func (s *service) GetAllURLS(ctx context.Context, userID string) ([]models.AllUs
 	var urls []models.AllUserURL
 	var data models.AllUserURL
 	for _, info := range s.cache {
-		if info.UUID.String() == userID {
+		if info.UUID.String() == userID && !info.DeletedFlag {
 			data.OriginalURL = info.OriginalURL
 			data.ShortURL = config.BaseURL + "/" + info.ShortURL
 			urls = append(urls, data)
 		}
 	}
 	return urls, nil
+}
+
+func (s *service) MarkURLsAsDeleted(ctx context.Context, userID string, shortURLs []string) error {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for _, url := range shortURLs {
+		for _, info := range s.cache {
+			if info.UUID.String() == userID && info.ShortURL == url {
+				info.DeletedFlag = true
+			}
+		}
+	}
+	return nil
 }

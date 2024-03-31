@@ -103,3 +103,8 @@ func (s *service) GetAllURLS(ctx context.Context, userID string) ([]models.AllUs
 	}
 	return res, nil
 }
+
+func (s *service) MarkURLsAsDeleted(ctx context.Context, userID string, shortURLs []string) error {
+	dbimpl.MarkDeleted(s.data, userID, shortURLs)
+	return nil
+}

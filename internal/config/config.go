@@ -25,6 +25,7 @@ var (
 	ErrNotFound     = errors.New("URL doesn't exists")
 	ErrWrongMode    = errors.New("wrong, non db mode")
 	ErrTokenInvalid = errors.New("token is not valid")
+	ErrGone         = errors.New("this link is gone")
 )
 
 var (

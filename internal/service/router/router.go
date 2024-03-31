@@ -18,6 +18,7 @@ func RouterInit(svc service.APIServiceI, logger *zap.Logger) *chi.Mux {
 	router.Post("/", middleware.LoggingMiddleware(svc.PostShorter, logger))
 	router.Post("/api/shorten", middleware.LoggingMiddleware(svc.PostShorterJSON, logger))
 	router.Post("/api/shorten/batch", middleware.LoggingMiddleware(svc.ShortenBatchHandler, logger))
+	router.Delete("/api/user/urls", middleware.LoggingMiddleware(svc.DeleteURLsHandler, logger))
 
 	return router
 }

@@ -14,9 +14,10 @@ type ShortURLResponse struct {
 }
 
 type URLData struct {
-	UUID        uuid.UUID `json:"uuid"`
-	ShortURL    string    `json:"short_url"`
-	OriginalURL string    `json:"original_url"`
+	UUID        uuid.UUID `db:"user_id"`
+	ShortURL    string    `db:"short_url"`
+	OriginalURL string    `db:"original_url"`
+	DeletedFlag bool      `db:"is_deleted"`
 }
 
 type ShortenBatchRequestItem struct {

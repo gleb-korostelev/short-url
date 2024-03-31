@@ -35,6 +35,7 @@ func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID 
 	save.OriginalURL = originalURL
 	save.ShortURL = shortURL
 	save.UUID = uuid
+	save.DeletedFlag = false
 	err = business.SaveURLs(save)
 	if err != nil {
 		return "", http.StatusBadRequest, err
@@ -55,6 +56,7 @@ func (s *service) SaveURL(ctx context.Context, originalURL string, userID string
 	save.OriginalURL = originalURL
 	save.ShortURL = shortURL
 	save.UUID = uuid
+	save.DeletedFlag = false
 	err = business.SaveURLs(save)
 	if err != nil {
 		logger.Errorf("Error with saving in file %v", err)
@@ -87,4 +89,9 @@ func (s *service) GetAllURLS(ctx context.Context, userID string) ([]models.AllUs
 		return nil, err
 	}
 	return res, nil
+}
+
+func (s *service) MarkURLsAsDeleted(ctx context.Context, userID string, shortURLs []string) error {
+	err := business.MarkURLsAsDeletedInFile(config.BaseURL, userID, shortURLs)
+	return err
 }

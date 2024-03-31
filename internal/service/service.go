@@ -9,4 +9,5 @@ type APIServiceI interface {
 	PostShorterJSON(w http.ResponseWriter, r *http.Request)
 	ShortenBatchHandler(w http.ResponseWriter, r *http.Request)
 	GetUserURLs(w http.ResponseWriter, r *http.Request)
+	DeleteURLsHandler(w http.ResponseWriter, r *http.Request)
 }
