@@ -5,11 +5,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/gleb-korostelev/short-url.git/internal/service/business"
 )
 
 func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST method is allowed", http.StatusBadRequest)
+		return
+	}
+	userID, err := business.GetUserIDFromCookie(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	w.Header().Set("content-type", "text/plain")
@@ -22,7 +29,7 @@ func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
 
 	originalURL := string(body)
 
-	shortURL, status, err := svc.store.SaveUniqueURL(context.Background(), originalURL)
+	shortURL, status, err := svc.store.SaveUniqueURL(context.Background(), originalURL, userID)
 	w.WriteHeader(status)
 	if err != nil {
 		http.Error(w, "Error with saving file", http.StatusBadRequest)

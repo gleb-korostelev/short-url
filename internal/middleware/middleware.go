@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -103,4 +105,14 @@ func (w *gzipResponseWriter) Write(b []byte) (int, error) {
 		w.WriteHeader(http.StatusOK)
 	}
 	return w.Writer.Write(b)
+}
+
+func EnsureUserCookie(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, err := business.GetSecureCookie(r); err != nil {
+			userID := uuid.New()
+			business.SetJWTInCookie(w, userID.String())
+		}
+		next.ServeHTTP(w, r)
+	})
 }

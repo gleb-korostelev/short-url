@@ -1,6 +1,7 @@
 package cache
 
+import "github.com/gleb-korostelev/short-url.git/internal/models"
+
 var (
-	Cache = make(map[string]string)
-	// Mu    sync.RWMutex
+	Cache []models.URLData
 )

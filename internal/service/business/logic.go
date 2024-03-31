@@ -3,12 +3,15 @@ package business
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"math/rand"
+	"net/http"
 	"os"
+	"time"
 
-	"github.com/gleb-korostelev/short-url.git/internal/cache"
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/models"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func GenerateShortPath() string {
@@ -51,10 +54,102 @@ func LoadURLs(path string, shortURL string) (string, error) {
 		if err := json.Unmarshal([]byte(scanner.Text()), &urlData); err != nil {
 			return "", err
 		}
-		cache.Cache[urlData.ShortURL] = urlData.OriginalURL
+		if urlData.ShortURL == shortURL {
+			return urlData.OriginalURL, nil
+		}
 	}
 	if err := scanner.Err(); err != nil {
 		return "", err
 	}
-	return cache.Cache[shortURL], nil
+	return "", nil
+}
+
+func LoadUserURLs(path string, userID string) ([]models.AllUserURL, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	var urls []models.AllUserURL
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		var urlData models.URLData
+		var data models.AllUserURL
+		if err := json.Unmarshal([]byte(scanner.Text()), &urlData); err != nil {
+			return nil, err
+		}
+		if urlData.UUID.String() == userID {
+			data.OriginalURL = urlData.OriginalURL
+			data.ShortURL = config.BaseURL + "/" + urlData.ShortURL
+			urls = append(urls, data)
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return urls, nil
+}
+
+func GenerateJWT(userID string, jwtKeySecret string) (string, error) {
+	expirationTime := time.Now().Add(config.TokenExpirationInHour * time.Hour)
+	claims := &models.Claims{
+		UserID: userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(jwtKeySecret))
+
+	return tokenString, err
+}
+
+func VerifyJWT(tokenString string, jwtKeySecret string) (*models.Claims, error) {
+	claims := &models.Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		return []byte(jwtKeySecret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if !token.Valid {
+		return nil, config.ErrTokenInvalid
+	}
+
+	return claims, nil
+}
+
+func SetJWTInCookie(w http.ResponseWriter, userID string) {
+	tokenString, err := GenerateJWT(userID, config.JwtKeySecret)
+	if err != nil {
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   tokenString,
+		Expires: time.Now().Add(config.TokenExpirationInHour * time.Hour),
+	})
+}
+
+func GetUserIDFromCookie(r *http.Request) (string, error) {
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			return "", err
+		}
+		return "", err
+	}
+
+	claims, err := VerifyJWT(cookie.Value, config.JwtKeySecret)
+	if err != nil {
+		return "", err
+	}
+
+	return claims.UserID, nil
 }

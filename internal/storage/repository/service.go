@@ -8,6 +8,7 @@ import (
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/db"
 	"github.com/gleb-korostelev/short-url.git/internal/db/dbimpl"
+	"github.com/gleb-korostelev/short-url.git/internal/models"
 	"github.com/gleb-korostelev/short-url.git/internal/service/business"
 	"github.com/gleb-korostelev/short-url.git/internal/storage"
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
@@ -24,11 +25,15 @@ func NewDBStorage(data db.DatabaseI) storage.Storage {
 	}
 }
 
-func (s *service) SaveUniqueURL(ctx context.Context, originalURL string) (string, int, error) {
+func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID string) (string, int, error) {
 	shortURL := business.GenerateShortPath()
 
-	uuid := uuid.New()
-	err := dbimpl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
+	uuid, err := uuid.Parse(userID)
+	if err != nil {
+		logger.Errorf("Error with parsing userId in database %v", err)
+		return "", http.StatusInternalServerError, err
+	}
+	err = dbimpl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
 	if err != nil {
 		if errors.Is(err, config.ErrExists) {
 			existingShortURL, err := dbimpl.GetShortURLByOriginalURL(s.data, originalURL)
@@ -42,11 +47,15 @@ func (s *service) SaveUniqueURL(ctx context.Context, originalURL string) (string
 	return config.BaseURL + "/" + shortURL, http.StatusCreated, nil
 }
 
-func (s *service) SaveURL(ctx context.Context, originalURL string) (string, error) {
+func (s *service) SaveURL(ctx context.Context, originalURL string, userID string) (string, error) {
 	shortURL := business.GenerateShortPath()
 
-	uuid := uuid.New()
-	err := dbimpl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
+	uuid, err := uuid.Parse(userID)
+	if err != nil {
+		logger.Errorf("Error with parsing userId in database %v", err)
+		return "", err
+	}
+	err = dbimpl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
 	if err != nil {
 		logger.Errorf("Error with saving in database %v", err)
 		return "", err
@@ -71,10 +80,20 @@ func (s *service) Ping(ctx context.Context) (int, error) {
 	}
 	return http.StatusOK, nil
 }
+
 func (s *service) Close() error {
 	err := s.data.Close()
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (s *service) GetAllURLS(ctx context.Context, userID string) ([]models.AllUserURL, error) {
+	res, err := dbimpl.GetOriginalURLByUUID(s.data, userID)
+	if err != nil {
+		logger.Errorf("Failed to get all user URLS %v", err)
+		return nil, err
+	}
+	return res, nil
 }
