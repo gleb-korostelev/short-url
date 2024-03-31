@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/gleb-korostelev/short-url.git/internal/config"
 )
 
 func (svc *APIService) GetUserURLs(w http.ResponseWriter, r *http.Request) {
-	userID, err := business.GetUserIDFromCookie(r)
-	if err != nil {
+	userID, ok := r.Context().Value(config.UserContextKey).(string)
+	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/models"
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
 )
 
 func (svc *APIService) PostShorterJSON(w http.ResponseWriter, r *http.Request) {
@@ -17,8 +17,8 @@ func (svc *APIService) PostShorterJSON(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	userID, err := business.GetUserIDFromCookie(r)
-	if err != nil {
+	userID, ok := r.Context().Value(config.UserContextKey).(string)
+	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

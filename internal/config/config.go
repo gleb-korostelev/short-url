@@ -16,6 +16,10 @@ const (
 	TokenExpirationInHour = 24
 )
 
+type contextKey string
+
+const UserContextKey = contextKey("user")
+
 var (
 	ErrExists       = errors.New("URL already exists")
 	ErrNotFound     = errors.New("URL doesn't exists")

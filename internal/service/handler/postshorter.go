@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/gleb-korostelev/short-url.git/internal/config"
 )
 
 func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
@@ -14,8 +14,8 @@ func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only POST method is allowed", http.StatusBadRequest)
 		return
 	}
-	userID, err := business.GetUserIDFromCookie(r)
-	if err != nil {
+	userID, ok := r.Context().Value(config.UserContextKey).(string)
+	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
