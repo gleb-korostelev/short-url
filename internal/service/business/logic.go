@@ -145,11 +145,9 @@ func GetUserIDFromCookie(r *http.Request) (string, error) {
 		}
 		return "", err
 	}
-
 	claims, err := VerifyJWT(cookie.Value, config.JwtKeySecret)
 	if err != nil {
 		return "", err
 	}
-
 	return claims.UserID, nil
 }
