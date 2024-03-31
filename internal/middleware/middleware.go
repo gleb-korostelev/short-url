@@ -109,7 +109,7 @@ func (w *gzipResponseWriter) Write(b []byte) (int, error) {
 
 func EnsureUserCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, err := business.GetSecureCookie(r); err != nil {
+		if _, err := business.GetUserIDFromCookie(r); err != nil {
 			userID := uuid.New()
 			business.SetJWTInCookie(w, userID.String())
 		}
