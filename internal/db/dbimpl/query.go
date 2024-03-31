@@ -41,17 +41,12 @@ func CreateShortURL(db db.DatabaseI, uuid, shortURL, originalURL string) error {
 func GetOriginalURL(db db.DatabaseI, shortURL string) (string, error) {
 	var originalURL string
 	var isDeleted bool
-	sql := `SELECT original_url FROM shortened_urls WHERE short_url = $1`
-	err := db.QueryRow(context.Background(), sql, shortURL).Scan(&originalURL)
+	sql := `SELECT original_url, is_deleted FROM shortened_urls WHERE short_url = $1`
+	err := db.QueryRow(context.Background(), sql, shortURL).Scan(&originalURL, &isDeleted)
 	if err != nil {
 		return "", err
 	}
-	sql = `SELECT is_deleted FROM shortened_urls WHERE short_url = $1`
-	err = db.QueryRow(context.Background(), sql, shortURL).Scan(&isDeleted)
-	if err != nil {
-		return "", err
-	}
-	if !isDeleted {
+	if isDeleted {
 		return "", config.ErrGone
 	}
 	return originalURL, nil
