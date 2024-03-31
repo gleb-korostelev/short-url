@@ -2,11 +2,15 @@ package middleware
 
 import (
 	"compress/gzip"
+	"context"
 	"io"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -103,4 +107,16 @@ func (w *gzipResponseWriter) Write(b []byte) (int, error) {
 		w.WriteHeader(http.StatusOK)
 	}
 	return w.Writer.Write(b)
+}
+
+func EnsureUserCookie(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID, err := business.GetUserIDFromCookie(r)
+		if err != nil {
+			userID = uuid.New().String()
+			business.SetJWTInCookie(w, userID)
+		}
+		ctx := context.WithValue(r.Context(), config.UserContextKey, userID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }

@@ -62,13 +62,13 @@ func (db *Database) Exec(ctx context.Context, query string, args ...interface{})
 	return tg, nil
 }
 
-func (db *Database) Query(ctx context.Context, query string, args ...interface{}) pgx.Rows {
+func (db *Database) Query(ctx context.Context, query string, args ...interface{}) (pgx.Rows, error) {
 	rows, err := db.Conn.Query(ctx, query, args...)
 	if err != nil {
 		logger.Errorf("internal error %v", err)
-		return nil
+		return nil, err
 	}
-	return rows
+	return rows, nil
 }
 
 func (db *Database) QueryRow(ctx context.Context, query string, args ...interface{}) pgx.Row {

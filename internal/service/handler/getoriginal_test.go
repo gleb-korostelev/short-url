@@ -6,10 +6,12 @@ import (
 	"testing"
 
 	"github.com/gleb-korostelev/short-url.git/internal/cache"
+	"github.com/gleb-korostelev/short-url.git/internal/models"
 	"github.com/gleb-korostelev/short-url.git/internal/storage/repository"
 	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 )
 
 func TestGetOriginal(t *testing.T) {
@@ -26,7 +28,11 @@ func TestGetOriginal(t *testing.T) {
 
 	testShort := "testID"
 	testURL := "https://example.com"
-	cache.Cache[testShort] = testURL
+	var testdata models.URLData
+	testdata.OriginalURL = testURL
+	testdata.ShortURL = testShort
+	testdata.UUID = uuid.New()
+	cache.Cache = append(cache.Cache, testdata)
 
 	t.Run("Unsupported Method", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/"+testShort, nil)

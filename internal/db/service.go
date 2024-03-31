@@ -11,7 +11,7 @@ type DatabaseI interface {
 	Close() error
 	Ping(ctx context.Context) error
 	Exec(ctx context.Context, query string, args ...interface{}) (pgconn.CommandTag, error)
-	Query(ctx context.Context, query string, args ...interface{}) pgx.Rows
+	Query(ctx context.Context, query string, args ...interface{}) (pgx.Rows, error)
 	QueryRow(ctx context.Context, query string, args ...interface{}) pgx.Row
 	GetConn(ctx context.Context) *pgx.Conn
 }
