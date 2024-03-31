@@ -9,11 +9,6 @@ import (
 )
 
 func (svc *APIService) GetUserURLs(w http.ResponseWriter, r *http.Request) {
-	// userID, ok := r.Context().Value(config.UserContextKey).(string)
-	// if !ok {
-	// 	w.WriteHeader(http.StatusUnauthorized)
-	// 	return
-	// }
 	userID, err := business.GetUserIDFromCookie(r)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
