@@ -55,9 +55,15 @@ func (s *service) SaveURL(ctx context.Context, originalURL string, userID string
 		logger.Errorf("Error with parsing userId in database %v", err)
 		return "", err
 	}
-	err = dbimpl.CreateNonUniqueShortURL(s.data, uuid.String(), shortURL, originalURL)
+	err = dbimpl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
 	if err != nil {
-		logger.Errorf("Error with saving in database %v", err)
+		if errors.Is(err, config.ErrExists) {
+			existingShortURL, err := dbimpl.GetShortURLByOriginalURL(s.data, originalURL)
+			if err != nil {
+				return "", err
+			}
+			return config.BaseURL + "/" + existingShortURL, nil
+		}
 		return "", err
 	}
 	return config.BaseURL + "/" + shortURL, nil

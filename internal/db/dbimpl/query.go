@@ -18,30 +18,8 @@ func InitializeTables(db db.DatabaseI) error {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );`
 	_, err := db.Exec(context.Background(), createTableSQL)
-	if err != nil {
-		return err
-	}
-
-	createNonUniqueTableSQL := `
-    CREATE TABLE IF NOT EXISTS shortened_urls_nonunique (
-        id SERIAL PRIMARY KEY,
-		user_id UUID NOT NULL,
-        short_url VARCHAR(255) UNIQUE NOT NULL,
-        original_url VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );`
-	_, err = db.Exec(context.Background(), createNonUniqueTableSQL)
 
 	return err
-}
-
-func CreateNonUniqueShortURL(db db.DatabaseI, uuid, shortURL, originalURL string) error {
-	sql := `INSERT INTO shortened_urls_nonunique (user_id, short_url, original_url) VALUES ($1, $2, $3)`
-	_, err := db.Exec(context.Background(), sql, uuid, shortURL, originalURL)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func CreateShortURL(db db.DatabaseI, uuid, shortURL, originalURL string) error {
