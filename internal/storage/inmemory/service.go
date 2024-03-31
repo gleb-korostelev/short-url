@@ -121,12 +121,12 @@ func (s *service) GetAllURLS(ctx context.Context, userID string) ([]models.AllUs
 func (s *service) MarkURLsAsDeleted(ctx context.Context, userID string, shortURLs []string) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	for _, url := range shortURLs {
-		for _, info := range s.cache {
-			if info.UUID.String() == userID && info.ShortURL == url {
-				info.DeletedFlag = true
-			}
+	for i, info := range s.cache {
+		if info.UUID.String() == userID && business.CheckURL(info.ShortURL, shortURLs) {
+			s.cache[i].DeletedFlag = true
 		}
+
 	}
+
 	return nil
 }

@@ -168,7 +168,7 @@ func MarkURLsAsDeletedInFile(path, userID string, shortURLs []string) error {
 		if err := json.Unmarshal([]byte(scanner.Text()), &urlData); err != nil {
 			return err
 		}
-		if urlData.UUID.String() == userID && checkURL(urlData.ShortURL, shortURLs) {
+		if urlData.UUID.String() == userID && CheckURL(urlData.ShortURL, shortURLs) {
 			urlData.DeletedFlag = true
 		}
 		data, err := json.Marshal(urlData)
@@ -189,7 +189,7 @@ func MarkURLsAsDeletedInFile(path, userID string, shortURLs []string) error {
 	return writer.Flush()
 }
 
-func checkURL(check string, findlist []string) bool {
+func CheckURL(check string, findlist []string) bool {
 	for _, find := range findlist {
 		if find == check {
 			return true
