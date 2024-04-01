@@ -8,6 +8,7 @@ import (
 
 type Task struct {
 	Action func(ctx context.Context) error
+	Done   chan struct{}
 }
 
 type DBWorkerPool struct {
@@ -35,6 +36,9 @@ func (p *DBWorkerPool) worker() {
 	for task := range p.taskQueue {
 		if err := task.Action(context.Background()); err != nil {
 			fmt.Printf("Error executing task: %v\n", err)
+		}
+		if task.Done != nil {
+			close(task.Done)
 		}
 	}
 }
