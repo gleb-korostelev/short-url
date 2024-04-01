@@ -12,6 +12,7 @@ import (
 	"github.com/gleb-korostelev/short-url.git/internal/storage/filecache"
 	"github.com/gleb-korostelev/short-url.git/internal/storage/inmemory"
 	"github.com/gleb-korostelev/short-url.git/internal/storage/repository"
+	"github.com/gleb-korostelev/short-url.git/internal/worker"
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"go.uber.org/zap"
 )
@@ -25,7 +26,10 @@ func main() {
 		return
 	}
 	defer store.Close()
-	svc := handler.NewAPIService(store)
+
+	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
+	defer workerPool.Shutdown()
+	svc := handler.NewAPIService(store, workerPool)
 
 	r := router.RouterInit(svc, log)
 
@@ -35,6 +39,7 @@ func main() {
 	if err := http.ListenAndServe(config.ServerAddr, r); err != nil {
 		logger.Fatal("Error starting server: %v", zap.Error(err))
 	}
+
 }
 
 func storageInit() (storage.Storage, error) {
