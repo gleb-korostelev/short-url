@@ -26,20 +26,18 @@ func (svc *APIService) DeleteURLsHandler(w http.ResponseWriter, r *http.Request)
 
 	sem := make(chan struct{}, config.MaxConcurrentUpdates)
 
-	for i := 0; i < config.MaxConcurrentUpdates; i++ {
-		wg.Add(1)
-		go func(userID string, shortURLs []string) {
-			sem <- struct{}{}
-			defer wg.Done()
-			defer func() { <-sem }()
-			err = svc.store.MarkURLsAsDeleted(context.Background(), userID, shortURLs)
-			if err != nil {
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
-			}
-			w.WriteHeader(http.StatusAccepted)
-		}(userID, shortURLs)
-		// w.WriteHeader(http.StatusAccepted)
-	}
+	wg.Add(1)
+	go func(userID string, shortURLs []string) {
+		sem <- struct{}{}
+		defer wg.Done()
+		defer func() { <-sem }()
+		err = svc.store.MarkURLsAsDeleted(context.Background(), userID, shortURLs)
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+		}
+		w.WriteHeader(http.StatusAccepted)
+	}(userID, shortURLs)
+	// w.WriteHeader(http.StatusAccepted)
 
 	wg.Wait()
 }
