@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/service/business"
@@ -38,7 +37,6 @@ func (svc *APIService) DeleteURLsHandler(w http.ResponseWriter, r *http.Request)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 			}
 			w.WriteHeader(http.StatusAccepted)
-			time.Sleep(1 * time.Second)
 		}(userID, shortURLs)
 		// w.WriteHeader(http.StatusAccepted)
 	}
