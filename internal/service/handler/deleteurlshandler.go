@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/service/business"
@@ -26,15 +27,21 @@ func (svc *APIService) DeleteURLsHandler(w http.ResponseWriter, r *http.Request)
 
 	sem := make(chan struct{}, config.MaxConcurrentUpdates)
 
-	go func(userID string, shortURLs []string) {
-		defer wg.Done()
-		defer func() { <-sem }()
-		err = svc.store.MarkURLsAsDeleted(context.Background(), userID, shortURLs)
-		if err != nil {
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-		}
-		w.WriteHeader(http.StatusAccepted)
-	}(userID, shortURLs)
-	w.WriteHeader(http.StatusAccepted)
+	for i := 0; i < config.MaxConcurrentUpdates; i++ {
+		wg.Add(1)
+		go func(userID string, shortURLs []string) {
+			sem <- struct{}{}
+			defer wg.Done()
+			defer func() { <-sem }()
+			err = svc.store.MarkURLsAsDeleted(context.Background(), userID, shortURLs)
+			if err != nil {
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+			}
+			w.WriteHeader(http.StatusAccepted)
+			time.Sleep(1 * time.Second)
+		}(userID, shortURLs)
+		// w.WriteHeader(http.StatusAccepted)
+	}
+
 	wg.Wait()
 }
