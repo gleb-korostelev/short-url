@@ -36,7 +36,7 @@ func (svc *APIService) DeleteURLsHandler(w http.ResponseWriter, r *http.Request)
 	doneChan := make(chan struct{})
 	svc.worker.AddTask(worker.Task{
 		Action: func(ctx context.Context) error {
-			err = svc.store.MarkURLsAsDeleted(context.Background(), userID, shortURLs)
+			err = svc.store.MarkURLsAsDeleted(ctx, userID, shortURLs)
 			if err != nil {
 				logger.Errorf("Internal server error %v", err)
 				// http.Error(w, "Internal server error", http.StatusInternalServerError)

@@ -36,7 +36,7 @@ func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
 
 	svc.worker.AddTask(worker.Task{
 		Action: func(ctx context.Context) error {
-			shortURL, status, err := svc.store.SaveUniqueURL(context.Background(), originalURL, userID)
+			shortURL, status, err := svc.store.SaveUniqueURL(ctx, originalURL, userID)
 			w.WriteHeader(status)
 			if err != nil {
 				logger.Errorf("Error with saving data in here %v", err)
