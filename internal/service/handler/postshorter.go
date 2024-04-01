@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/tools/logger"
 )
 
 func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +43,8 @@ func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
 		shortURL, status, err := svc.store.SaveUniqueURL(context.Background(), originalURL, userID)
 		w.WriteHeader(status)
 		if err != nil {
-			http.Error(w, "Error with saving file", http.StatusBadRequest)
+			logger.Errorf("Error with saving data %v", err)
+			http.Error(w, "Error with saving data", http.StatusBadRequest)
 			return
 		}
 		fmt.Fprint(w, shortURL)
