@@ -27,7 +27,7 @@ func NewMemoryStorage(cache []models.URLData) storage.Storage {
 func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID string) (string, int, error) {
 	uuid, err := uuid.Parse(userID)
 	if err != nil {
-		logger.Errorf("Error with parsing userId in database %v", err)
+		logger.Errorf("Error with parsing userId in memory %v", err)
 		return "", http.StatusBadRequest, err
 	}
 
@@ -54,7 +54,7 @@ func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID 
 func (s *service) SaveURL(ctx context.Context, originalURL string, userID string) (string, error) {
 	uuid, err := uuid.Parse(userID)
 	if err != nil {
-		logger.Errorf("Error with parsing userId in database %v", err)
+		logger.Errorf("Error with parsing userId in memory %v", err)
 		return "", err
 	}
 

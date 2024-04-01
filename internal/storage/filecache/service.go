@@ -27,7 +27,7 @@ func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID 
 
 	uuid, err := uuid.Parse(userID)
 	if err != nil {
-		logger.Errorf("Error with parsing userId in database %v", err)
+		logger.Errorf("Error with parsing userId in file %v", err)
 		return "", http.StatusBadRequest, err
 	}
 
@@ -48,7 +48,7 @@ func (s *service) SaveURL(ctx context.Context, originalURL string, userID string
 
 	uuid, err := uuid.Parse(userID)
 	if err != nil {
-		logger.Errorf("Error with parsing userId in database %v", err)
+		logger.Errorf("Error with parsing userId in file %v", err)
 		return "", err
 	}
 
@@ -59,7 +59,7 @@ func (s *service) SaveURL(ctx context.Context, originalURL string, userID string
 	save.DeletedFlag = false
 	err = business.SaveURLs(save)
 	if err != nil {
-		logger.Errorf("Error with saving in file %v", err)
+		logger.Errorf("Error with saving in file here %v", err)
 		return "", err
 	}
 	return config.BaseURL + "/" + shortURL, nil
