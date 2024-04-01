@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 )
@@ -29,11 +30,32 @@ func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
 
 	originalURL := string(body)
 
-	shortURL, status, err := svc.store.SaveUniqueURL(context.Background(), originalURL, userID)
-	w.WriteHeader(status)
-	if err != nil {
-		http.Error(w, "Error with saving file", http.StatusBadRequest)
-		return
-	}
-	fmt.Fprint(w, shortURL)
+	var wg sync.WaitGroup
+
+	sem := make(chan struct{}, config.MaxConcurrentUpdates)
+
+	wg.Add(1)
+	go func(userID string, originalURL string) {
+		sem <- struct{}{}
+		defer wg.Done()
+		defer func() { <-sem }()
+		shortURL, status, err := svc.store.SaveUniqueURL(context.Background(), originalURL, userID)
+		w.WriteHeader(status)
+		if err != nil {
+			http.Error(w, "Error with saving file", http.StatusBadRequest)
+			return
+		}
+		fmt.Fprint(w, shortURL)
+	}(userID, originalURL)
+	// w.WriteHeader(http.StatusAccepted)
+
+	wg.Wait()
+
+	// shortURL, status, err := svc.store.SaveUniqueURL(context.Background(), originalURL, userID)
+	// w.WriteHeader(status)
+	// if err != nil {
+	// 	http.Error(w, "Error with saving file", http.StatusBadRequest)
+	// 	return
+	// }
+	// fmt.Fprint(w, shortURL)
 }
