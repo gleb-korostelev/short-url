@@ -40,6 +40,7 @@ func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(status)
 			if err != nil {
 				logger.Errorf("Error with saving data in here %v", err)
+				// w.WriteHeader(http.StatusBadRequest)
 				// http.Error(w, "Error with saving data", http.StatusBadRequest)
 				return nil
 			}
