@@ -45,7 +45,7 @@ func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Fprint(w, shortURL)
 	}(originalURL, userID)
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusCreated)
 	wg.Wait()
 
 }
