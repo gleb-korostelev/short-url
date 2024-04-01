@@ -37,10 +37,4 @@ func (svc *APIService) DeleteURLsHandler(w http.ResponseWriter, r *http.Request)
 	}(userID, shortURLs)
 	w.WriteHeader(http.StatusAccepted)
 	wg.Wait()
-
-	// err = svc.store.MarkURLsAsDeleted(context.Background(), userID, shortURLs)
-	// if err != nil {
-	// 	http.Error(w, "Internal server error", http.StatusInternalServerError)
-	// }
-	// w.WriteHeader(http.StatusAccepted)
 }

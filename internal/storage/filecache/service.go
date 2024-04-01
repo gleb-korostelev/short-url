@@ -59,7 +59,7 @@ func (s *service) SaveURL(ctx context.Context, originalURL string, userID string
 	save.DeletedFlag = false
 	err = business.SaveURLs(save)
 	if err != nil {
-		logger.Errorf("Error with saving in file here %v", err)
+		logger.Errorf("Error with saving in file %v", err)
 		return "", err
 	}
 	return config.BaseURL + "/" + shortURL, nil
