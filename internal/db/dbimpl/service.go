@@ -8,14 +8,15 @@ import (
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Database struct {
-	Conn *pgx.Conn
+	Conn *pgxpool.Pool
 }
 
 func InitDB() (db.DatabaseI, error) {
-	сonnection, err := pgx.Connect(context.Background(), config.DBDSN)
+	сonnection, err := pgxpool.New(context.Background(), config.DBDSN)
 	if err != nil {
 		logger.Infof("Unable to connect to database: %v\n", err)
 		return nil, err
@@ -31,16 +32,12 @@ func InitDB() (db.DatabaseI, error) {
 	return data, nil
 }
 
-func (db *Database) GetConn(ctx context.Context) *pgx.Conn {
+func (db *Database) GetConn(ctx context.Context) *pgxpool.Pool {
 	return db.Conn
 }
 
 func (db *Database) Close() error {
-	err := db.Conn.Close(context.Background())
-	if err != nil {
-		logger.Errorf("internal error %v", err)
-		return err
-	}
+	db.Conn.Close()
 	return nil
 }
 

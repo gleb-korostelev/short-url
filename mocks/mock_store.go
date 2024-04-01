@@ -11,6 +11,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	pgx "github.com/jackc/pgx/v5"
 	pgconn "github.com/jackc/pgx/v5/pgconn"
+	pgxpool "github.com/jackc/pgx/v5/pgxpool"
 )
 
 // MockDatabaseI is a mock of DatabaseI interface.
@@ -71,10 +72,10 @@ func (mr *MockDatabaseIMockRecorder) Exec(ctx, query interface{}, args ...interf
 }
 
 // GetConn mocks base method.
-func (m *MockDatabaseI) GetConn(ctx context.Context) *pgx.Conn {
+func (m *MockDatabaseI) GetConn(ctx context.Context) *pgxpool.Pool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetConn", ctx)
-	ret0, _ := ret[0].(*pgx.Conn)
+	ret0, _ := ret[0].(*pgxpool.Pool)
 	return ret0
 }
 
