@@ -59,7 +59,10 @@ func GetOriginalURL(db db.DatabaseI, shortURL string) (string, error) {
 }
 
 func GetOriginalURLByUUID(db db.DatabaseI, uuid string) ([]models.AllUserURL, error) {
-	sql := `SELECT short_url, original_url FROM shortened_urls WHERE user_id = $1 AND is_deleted = FALSE`
+	sql := `
+	SELECT short_url, original_url FROM shortened_urls
+	WHERE user_id = $1 AND is_deleted = FALSE
+	`
 	rows, err := db.Query(context.Background(), sql, uuid)
 	if err != nil {
 		return nil, err
@@ -95,7 +98,10 @@ func GetShortURLByOriginalURL(db db.DatabaseI, originalURL string) (string, erro
 
 func MarkDeleted(db db.DatabaseI, userID string, shortURLs []string) {
 	go func() {
-		sql := "UPDATE shortened_urls SET is_deleted = TRUE WHERE user_id = $1 AND short_url = ANY($2)"
+		sql := `
+		UPDATE shortened_urls SET is_deleted = TRUE
+		WHERE user_id = $1 AND short_url = ANY($2)
+		`
 		cmdTag, err := db.Exec(context.Background(), sql, userID, shortURLs)
 		if err != nil {
 			logger.Errorf("Error marking URLs as deleted: %v\n", err)
