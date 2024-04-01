@@ -25,9 +25,9 @@ func InitializeTables(db db.DatabaseI) error {
 }
 
 func CreateShortURL(db db.DatabaseI, uuid, shortURL, originalURL string) error {
-	is_deleted := false
+	isDeleted := false
 	sql := `INSERT INTO shortened_urls (user_id, short_url, original_url, is_deleted) VALUES ($1, $2, $3, $4) ON CONFLICT (original_url) DO NOTHING`
-	cmdTag, err := db.Exec(context.Background(), sql, uuid, shortURL, originalURL, is_deleted)
+	cmdTag, err := db.Exec(context.Background(), sql, uuid, shortURL, originalURL, isDeleted)
 	if err != nil {
 		return err
 	}

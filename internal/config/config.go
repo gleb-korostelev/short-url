@@ -14,6 +14,7 @@ const (
 	DefaultBaseURL        = "http://localhost:8080"
 	DefaultFilePath       = "./tmp/short-url-db.json"
 	TokenExpirationInHour = 24
+	MaxConcurrentUpdates  = 5
 )
 
 type contextKey string
