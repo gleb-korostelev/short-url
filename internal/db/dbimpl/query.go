@@ -2,8 +2,6 @@ package dbimpl
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/db"
@@ -27,8 +25,9 @@ func InitializeTables(db db.DatabaseI) error {
 }
 
 func CreateShortURL(db db.DatabaseI, uuid, shortURL, originalURL string) error {
-	sql := `INSERT INTO shortened_urls (user_id, short_url, original_url) VALUES ($1, $2, $3) ON CONFLICT (original_url) DO NOTHING`
-	cmdTag, err := db.Exec(context.Background(), sql, uuid, shortURL, originalURL)
+	is_deleted := false
+	sql := `INSERT INTO shortened_urls (user_id, short_url, original_url, is_deleted) VALUES ($1, $2, $3, $4) ON CONFLICT (original_url) DO NOTHING`
+	cmdTag, err := db.Exec(context.Background(), sql, uuid, shortURL, originalURL, is_deleted)
 	if err != nil {
 		return err
 	}
@@ -89,18 +88,8 @@ func GetShortURLByOriginalURL(db db.DatabaseI, originalURL string) (string, erro
 
 func MarkDeleted(db db.DatabaseI, userID string, shortURLs []string) {
 	go func() {
-		placeholders := make([]string, len(shortURLs))
-		args := make([]interface{}, len(shortURLs)+1)
-		args[0] = userID
-		for i, url := range shortURLs {
-			placeholders[i] = fmt.Sprintf("$%d", i+2)
-			args[i+1] = url
-		}
-
-		sql := fmt.Sprintf("UPDATE shortened_urls SET is_deleted = TRUE WHERE user_id = $1 AND short_url IN (%s)",
-			join(placeholders, ", "))
-
-		cmdTag, err := db.Exec(context.Background(), sql, args...)
+		sql := "UPDATE shortened_urls SET is_deleted = TRUE WHERE user_id = $1 AND short_url = ANY($2)"
+		cmdTag, err := db.Exec(context.Background(), sql, userID, shortURLs)
 		if err != nil {
 			logger.Errorf("Error marking URLs as deleted: %v\n", err)
 			return
@@ -111,8 +100,4 @@ func MarkDeleted(db db.DatabaseI, userID string, shortURLs []string) {
 			logger.Infof("%d URLs were marked as deleted.\n", cmdTag.RowsAffected())
 		}
 	}()
-}
-
-func join(a []string, sep string) string {
-	return strings.Join(a, sep)
 }

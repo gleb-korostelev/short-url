@@ -150,6 +150,7 @@ func GetUserIDFromCookie(r *http.Request) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	logger.Info("success authorized: ", claims.UserID)
 	return claims.UserID, nil
 }
 
