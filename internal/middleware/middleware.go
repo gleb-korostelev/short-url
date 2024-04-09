@@ -11,6 +11,7 @@ import (
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/service/utils"
+	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -116,7 +117,9 @@ func EnsureUserCookie(next http.Handler) http.Handler {
 		if errors.Is(err, http.ErrNoCookie) || err == config.ErrTokenInvalid {
 			userID = uuid.New().String()
 			utils.SetJWTInCookie(w, userID)
+			logger.Infof("error in cookie is %v", err)
 		} else if err != nil {
+			logger.Infof("error in cookie auth is %v", err)
 			http.Error(w, "Failed to Authorize", http.StatusUnauthorized)
 			return
 		}
