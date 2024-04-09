@@ -3,6 +3,7 @@ package middleware
 import (
 	"compress/gzip"
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -112,7 +113,7 @@ func (w *gzipResponseWriter) Write(b []byte) (int, error) {
 func EnsureUserCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, err := utils.GetUserIDFromCookie(r)
-		if err != nil && (err == http.ErrNoCookie || err == config.ErrTokenInvalid) {
+		if errors.Is(err, http.ErrNoCookie) || err == config.ErrTokenInvalid {
 			userID = uuid.New().String()
 			utils.SetJWTInCookie(w, userID)
 		} else if err != nil {
