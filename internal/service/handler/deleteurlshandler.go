@@ -27,11 +27,10 @@ func (svc *APIService) DeleteURLsHandler(w http.ResponseWriter, r *http.Request)
 				logger.Errorf("Internal server error %v", err)
 				w.WriteHeader(http.StatusInternalServerError)
 			}
-			// w.WriteHeader(http.StatusAccepted)
+			w.WriteHeader(http.StatusAccepted)
 			return nil
 		},
 		Done: doneChan,
 	})
-	w.WriteHeader(http.StatusAccepted)
 	<-doneChan
 }

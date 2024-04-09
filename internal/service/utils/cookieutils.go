@@ -60,9 +60,6 @@ func SetJWTInCookie(w http.ResponseWriter, userID string) {
 func GetUserIDFromCookie(r *http.Request) (string, error) {
 	cookie, err := r.Cookie("token")
 	if err != nil {
-		if err == http.ErrNoCookie {
-			return "", err
-		}
 		return "", err
 	}
 	claims, err := VerifyJWT(cookie.Value, config.JwtKeySecret)
