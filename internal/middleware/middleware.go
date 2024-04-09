@@ -16,22 +16,24 @@ import (
 	"go.uber.org/zap"
 )
 
-func LoggingMiddleware(next http.HandlerFunc, logger *zap.Logger) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
+func LoggingMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
 
-		ww := &responseWriter{ResponseWriter: w}
+			ww := &responseWriter{ResponseWriter: w}
 
-		next.ServeHTTP(ww, r)
+			next.ServeHTTP(ww, r)
 
-		logger.Info("request",
-			zap.String("method", r.Method),
-			zap.String("uri", r.RequestURI),
-			zap.Int("status", ww.status),
-			zap.Int("response_size", ww.size),
-			zap.Duration("duration", time.Since(start)),
-		)
-	})
+			logger.Info("request",
+				zap.String("method", r.Method),
+				zap.String("uri", r.RequestURI),
+				zap.Int("status", ww.status),
+				zap.Int("response_size", ww.size),
+				zap.Duration("duration", time.Since(start)),
+			)
+		})
+	}
 }
 
 func GzipCompressMiddleware(next http.Handler) http.Handler {

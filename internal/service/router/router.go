@@ -11,14 +11,19 @@ func RouterInit(svc service.APIServiceI, logger *zap.Logger) *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(middleware.GzipCompressMiddleware)
 	router.Use(middleware.GzipDecompressMiddleware)
-	router.Use(middleware.EnsureUserCookie)
-	router.Get("/ping", middleware.LoggingMiddleware(svc.Ping, logger))
-	router.Get("/{id}", middleware.LoggingMiddleware(svc.GetOriginal, logger))
-	router.Get("/api/user/urls", middleware.LoggingMiddleware(svc.GetUserURLs, logger))
-	router.Post("/", middleware.LoggingMiddleware(svc.PostShorter, logger))
-	router.Post("/api/shorten", middleware.LoggingMiddleware(svc.PostShorterJSON, logger))
-	router.Post("/api/shorten/batch", middleware.LoggingMiddleware(svc.ShortenBatchHandler, logger))
-	router.Delete("/api/user/urls", middleware.LoggingMiddleware(svc.DeleteURLsHandler, logger))
+	router.Use(middleware.LoggingMiddleware(logger))
+	router.Get("/ping", svc.Ping)
+	router.Get("/{id}", svc.GetOriginal)
+	router.Get("/api/user/urls", svc.GetUserURLs)
+
+	router.Route("/", func(r chi.Router) {
+		r.Use(middleware.EnsureUserCookie)
+
+		r.Post("/", svc.PostShorter)
+		r.Post("/api/shorten", svc.PostShorterJSON)
+		r.Post("/api/shorten/batch", svc.ShortenBatchHandler)
+		r.Delete("/api/user/urls", svc.DeleteURLsHandler)
+	})
 
 	return router
 }
