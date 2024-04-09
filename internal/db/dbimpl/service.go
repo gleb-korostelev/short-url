@@ -15,7 +15,7 @@ type Database struct {
 	Conn *pgxpool.Pool
 }
 
-func InitDB() (db.DatabaseI, error) {
+func InitDB() (db.DB, error) {
 	сonnection, err := pgxpool.New(context.Background(), config.DBDSN)
 	if err != nil {
 		logger.Infof("Unable to connect to database: %v\n", err)

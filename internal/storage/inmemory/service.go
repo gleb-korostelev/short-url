@@ -7,18 +7,18 @@ import (
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/models"
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/gleb-korostelev/short-url.git/internal/service/utils"
 	"github.com/gleb-korostelev/short-url.git/internal/storage"
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"github.com/google/uuid"
 )
 
 type service struct {
-	cache []models.URLData
+	cache map[string]models.URLData
 	mu    sync.RWMutex
 }
 
-func NewMemoryStorage(cache []models.URLData) storage.Storage {
+func NewMemoryStorage(cache map[string]models.URLData) storage.Storage {
 	return &service{
 		cache: cache,
 	}
@@ -31,12 +31,10 @@ func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID 
 		return "", http.StatusBadRequest, err
 	}
 
-	shortURL := business.GenerateShortPath()
+	shortURL := utils.GenerateShortPath()
 
-	for _, info := range s.cache {
-		if info.ShortURL == shortURL {
-			shortURL = business.GenerateShortPath()
-		}
+	for _, exists := s.cache[shortURL]; exists; {
+		shortURL = utils.GenerateShortPath()
 	}
 
 	var data models.URLData
@@ -44,7 +42,7 @@ func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID 
 	data.OriginalURL = originalURL
 	data.UUID = uuid
 	data.DeletedFlag = false
-	s.cache = append(s.cache, data)
+	s.cache[data.ShortURL] = data
 
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -58,12 +56,10 @@ func (s *service) SaveURL(ctx context.Context, originalURL string, userID string
 		return "", err
 	}
 
-	shortURL := business.GenerateShortPath()
+	shortURL := utils.GenerateShortPath()
 
-	for _, info := range s.cache {
-		if info.ShortURL == shortURL {
-			shortURL = business.GenerateShortPath()
-		}
+	for _, exists := s.cache[shortURL]; exists; {
+		shortURL = utils.GenerateShortPath()
 	}
 
 	var data models.URLData
@@ -71,7 +67,7 @@ func (s *service) SaveURL(ctx context.Context, originalURL string, userID string
 	data.OriginalURL = originalURL
 	data.UUID = uuid
 	data.DeletedFlag = false
-	s.cache = append(s.cache, data)
+	s.cache[data.ShortURL] = data
 
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -81,15 +77,14 @@ func (s *service) SaveURL(ctx context.Context, originalURL string, userID string
 func (s *service) GetOriginalLink(ctx context.Context, shortURL string) (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	for _, info := range s.cache {
-		if info.ShortURL == shortURL {
-			if info.DeletedFlag {
-				return "", config.ErrGone
-			}
-			return info.OriginalURL, nil
-		}
+	foundCache, exists := s.cache[shortURL]
+	if !exists {
+		return "", config.ErrNotFound
 	}
-	return "", config.ErrNotFound
+	if foundCache.DeletedFlag {
+		return "", config.ErrGone
+	}
+	return foundCache.OriginalURL, nil
 
 }
 
@@ -102,16 +97,16 @@ func (s *service) Close() error {
 	return nil
 }
 
-func (s *service) GetAllURLS(ctx context.Context, userID string) ([]models.AllUserURL, error) {
+func (s *service) GetAllURLS(ctx context.Context, userID, baseURL string) ([]models.UserURLs, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	var urls []models.AllUserURL
-	var data models.AllUserURL
+	var urls []models.UserURLs
+	var data models.UserURLs
 	for _, info := range s.cache {
 		if info.UUID.String() == userID && !info.DeletedFlag {
 			data.OriginalURL = info.OriginalURL
-			data.ShortURL = config.BaseURL + "/" + info.ShortURL
+			data.ShortURL = baseURL + "/" + info.ShortURL
 			urls = append(urls, data)
 		}
 	}
@@ -121,9 +116,10 @@ func (s *service) GetAllURLS(ctx context.Context, userID string) ([]models.AllUs
 func (s *service) MarkURLsAsDeleted(ctx context.Context, userID string, shortURLs []string) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	for i, info := range s.cache {
-		if info.UUID.String() == userID && business.CheckURL(info.ShortURL, shortURLs) {
-			s.cache[i].DeletedFlag = true
+	for _, info := range s.cache {
+		if info.UUID.String() == userID && utils.CheckURL(info.ShortURL, shortURLs) {
+			info.DeletedFlag = true
+			s.cache[info.ShortURL] = info
 		}
 
 	}

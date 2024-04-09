@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/worker"
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
 )
@@ -16,24 +16,22 @@ func (svc *APIService) DeleteURLsHandler(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	userID, err := business.GetUserIDFromCookie(r)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
+
+	userID := r.Context().Value(config.UserContextKey).(string)
 
 	doneChan := make(chan struct{})
 	svc.worker.AddTask(worker.Task{
 		Action: func(ctx context.Context) error {
-			err = svc.store.MarkURLsAsDeleted(ctx, userID, shortURLs)
+			err := svc.store.MarkURLsAsDeleted(ctx, userID, shortURLs)
 			if err != nil {
 				logger.Errorf("Internal server error %v", err)
 				w.WriteHeader(http.StatusInternalServerError)
 			}
-			w.WriteHeader(http.StatusAccepted)
+			// w.WriteHeader(http.StatusAccepted)
 			return nil
 		},
 		Done: doneChan,
 	})
+	w.WriteHeader(http.StatusAccepted)
 	<-doneChan
 }

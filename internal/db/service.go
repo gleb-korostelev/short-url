@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type DatabaseI interface {
+type DB interface {
 	Close() error
 	Ping(ctx context.Context) error
 	Exec(ctx context.Context, query string, args ...interface{}) (pgconn.CommandTag, error)

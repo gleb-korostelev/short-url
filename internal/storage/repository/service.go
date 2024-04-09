@@ -9,24 +9,24 @@ import (
 	"github.com/gleb-korostelev/short-url.git/internal/db"
 	"github.com/gleb-korostelev/short-url.git/internal/db/dbimpl"
 	"github.com/gleb-korostelev/short-url.git/internal/models"
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/gleb-korostelev/short-url.git/internal/service/utils"
 	"github.com/gleb-korostelev/short-url.git/internal/storage"
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"github.com/google/uuid"
 )
 
 type service struct {
-	data db.DatabaseI
+	data db.DB
 }
 
-func NewDBStorage(data db.DatabaseI) storage.Storage {
+func NewDBStorage(data db.DB) storage.Storage {
 	return &service{
 		data: data,
 	}
 }
 
 func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID string) (string, int, error) {
-	shortURL := business.GenerateShortPath()
+	shortURL := utils.GenerateShortPath()
 
 	uuid, err := uuid.Parse(userID)
 	if err != nil {
@@ -48,7 +48,7 @@ func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID 
 }
 
 func (s *service) SaveURL(ctx context.Context, originalURL string, userID string) (string, error) {
-	shortURL := business.GenerateShortPath()
+	shortURL := utils.GenerateShortPath()
 
 	uuid, err := uuid.Parse(userID)
 	if err != nil {
@@ -95,8 +95,8 @@ func (s *service) Close() error {
 	return nil
 }
 
-func (s *service) GetAllURLS(ctx context.Context, userID string) ([]models.AllUserURL, error) {
-	res, err := dbimpl.GetOriginalURLByUUID(s.data, userID)
+func (s *service) GetAllURLS(ctx context.Context, userID, baseURL string) ([]models.UserURLs, error) {
+	res, err := dbimpl.GetOriginalURLsByUserID(s.data, userID, baseURL)
 	if err != nil {
 		logger.Errorf("Failed to get all user URLS %v", err)
 		return nil, err

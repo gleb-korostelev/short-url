@@ -36,7 +36,8 @@ func TestGetOriginal(t *testing.T) {
 	testdata.OriginalURL = testURL
 	testdata.ShortURL = testShort
 	testdata.UUID = uuid.New()
-	cache.Cache = append(cache.Cache, testdata)
+	cache.Cache[testURL] = testdata
+	// cache.Cache = append(cache.Cache, testdata)
 
 	t.Run("Unsupported Method", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/"+testShort, nil)

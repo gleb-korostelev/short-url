@@ -5,16 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/gleb-korostelev/short-url.git/internal/config"
 )
 
 func (svc *APIService) GetUserURLs(w http.ResponseWriter, r *http.Request) {
-	userID, err := business.GetUserIDFromCookie(r)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	urls, err := svc.store.GetAllURLS(context.Background(), userID)
+	userID := r.Context().Value(config.UserContextKey).(string)
+	urls, err := svc.store.GetAllURLS(context.Background(), userID, config.BaseURL)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

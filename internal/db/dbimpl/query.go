@@ -9,7 +9,7 @@ import (
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
 )
 
-func InitializeTables(db db.DatabaseI) error {
+func InitializeTables(db db.DB) error {
 	createTableSQL := `
     CREATE TABLE IF NOT EXISTS shortened_urls (
         id SERIAL PRIMARY KEY,
@@ -24,7 +24,7 @@ func InitializeTables(db db.DatabaseI) error {
 	return err
 }
 
-func CreateShortURL(db db.DatabaseI, uuid, shortURL, originalURL string) error {
+func CreateShortURL(db db.DB, uuid, shortURL, originalURL string) error {
 	sql := `
     INSERT INTO shortened_urls (user_id, short_url, original_url, is_deleted)
     VALUES ($1, $2, $3, FALSE)
@@ -44,7 +44,7 @@ func CreateShortURL(db db.DatabaseI, uuid, shortURL, originalURL string) error {
 	return nil
 }
 
-func GetOriginalURL(db db.DatabaseI, shortURL string) (string, error) {
+func GetOriginalURL(db db.DB, shortURL string) (string, error) {
 	var originalURL string
 	var isDeleted bool
 	sql := `SELECT original_url, is_deleted FROM shortened_urls WHERE short_url = $1`
@@ -58,24 +58,24 @@ func GetOriginalURL(db db.DatabaseI, shortURL string) (string, error) {
 	return originalURL, nil
 }
 
-func GetOriginalURLByUUID(db db.DatabaseI, uuid string) ([]models.AllUserURL, error) {
+func GetOriginalURLsByUserID(db db.DB, userID, baseURL string) ([]models.UserURLs, error) {
 	sql := `
 	SELECT short_url, original_url FROM shortened_urls
 	WHERE user_id = $1 AND is_deleted = FALSE
 	`
-	rows, err := db.Query(context.Background(), sql, uuid)
+	rows, err := db.Query(context.Background(), sql, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var urls []models.AllUserURL
+	var urls []models.UserURLs
 	for rows.Next() {
-		var data models.AllUserURL
+		var data models.UserURLs
 		if err := rows.Scan(&data.ShortURL, &data.OriginalURL); err != nil {
 			return nil, err
 		}
-		data.ShortURL = config.BaseURL + "/" + data.ShortURL
+		data.ShortURL = baseURL + "/" + data.ShortURL
 		urls = append(urls, data)
 	}
 
@@ -86,7 +86,7 @@ func GetOriginalURLByUUID(db db.DatabaseI, uuid string) ([]models.AllUserURL, er
 	return urls, nil
 }
 
-func GetShortURLByOriginalURL(db db.DatabaseI, originalURL string) (string, error) {
+func GetShortURLByOriginalURL(db db.DB, originalURL string) (string, error) {
 	var shortURL string
 	sql := `SELECT short_url FROM shortened_urls WHERE original_url = $1`
 	err := db.QueryRow(context.Background(), sql, originalURL).Scan(&shortURL)
@@ -96,7 +96,7 @@ func GetShortURLByOriginalURL(db db.DatabaseI, originalURL string) (string, erro
 	return shortURL, nil
 }
 
-func MarkDeleted(db db.DatabaseI, userID string, shortURLs []string) {
+func MarkDeleted(db db.DB, userID string, shortURLs []string) {
 	go func() {
 		sql := `
 		UPDATE shortened_urls SET is_deleted = TRUE

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/gleb-korostelev/short-url.git/internal/service/utils"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -111,10 +111,13 @@ func (w *gzipResponseWriter) Write(b []byte) (int, error) {
 
 func EnsureUserCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID, err := business.GetUserIDFromCookie(r)
-		if err != nil {
+		userID, err := utils.GetUserIDFromCookie(r)
+		if err != nil && (err == http.ErrNoCookie || err == config.ErrTokenInvalid) {
 			userID = uuid.New().String()
-			business.SetJWTInCookie(w, userID)
+			utils.SetJWTInCookie(w, userID)
+		} else if err != nil {
+			http.Error(w, "Failed to Authorize", http.StatusUnauthorized)
+			return
 		}
 		ctx := context.WithValue(r.Context(), config.UserContextKey, userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
