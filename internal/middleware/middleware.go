@@ -118,7 +118,6 @@ func EnsureUserCookie(next http.Handler) http.Handler {
 			userID = uuid.New().String()
 			utils.SetJWTInCookie(w, userID)
 			logger.Infof("error in cookie is %v", err)
-			return
 		} else if err != nil {
 			logger.Infof("error in cookie auth is %v", err)
 			http.Error(w, "Failed to Authorize", http.StatusUnauthorized)

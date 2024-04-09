@@ -11,13 +11,17 @@ import (
 )
 
 func (svc *APIService) DeleteURLsHandler(w http.ResponseWriter, r *http.Request) {
+
+	userID, ok := r.Context().Value(config.UserContextKey).(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 	var shortURLs []string
 	if err := json.NewDecoder(r.Body).Decode(&shortURLs); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-
-	userID := r.Context().Value(config.UserContextKey).(string)
 
 	doneChan := make(chan struct{})
 	svc.worker.AddTask(worker.Task{
