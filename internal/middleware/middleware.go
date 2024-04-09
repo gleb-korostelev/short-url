@@ -117,7 +117,7 @@ func EnsureUserCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, err := utils.GetUserIDFromCookie(r)
 		if err != nil {
-			if errors.Is(err, http.ErrNoCookie) {
+			if errors.Is(err, http.ErrNoCookie) || err == config.ErrTokenInvalid {
 				userID = uuid.New().String()
 				utils.SetJWTInCookie(w, userID)
 				logger.Infof("Generated new user ID and set in cookie due to error: %v", err)

@@ -6,12 +6,19 @@ import (
 	"net/http"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/service/utils"
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
 )
 
 func (svc *APIService) GetUserURLs(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(config.UserContextKey).(string)
-	if !ok {
+	// userID, ok := r.Context().Value(config.UserContextKey).(string)
+	// if !ok {
+	// 	w.WriteHeader(http.StatusUnauthorized)
+	// 	return
+	// }
+
+	userID, err := utils.GetUserIDFromCookie(r)
+	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -25,7 +32,6 @@ func (svc *APIService) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(urls) == 0 {
-		logger.Infof("userID is: ", userID)
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
