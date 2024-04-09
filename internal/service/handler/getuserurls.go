@@ -9,7 +9,11 @@ import (
 )
 
 func (svc *APIService) GetUserURLs(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(config.UserContextKey).(string)
+	userID, ok := r.Context().Value(config.UserContextKey).(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 	urls, err := svc.store.GetAllURLS(context.Background(), userID, config.BaseURL)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

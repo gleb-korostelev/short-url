@@ -11,7 +11,6 @@ import (
 )
 
 func (svc *APIService) DeleteURLsHandler(w http.ResponseWriter, r *http.Request) {
-
 	userID, ok := r.Context().Value(config.UserContextKey).(string)
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
