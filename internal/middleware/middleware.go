@@ -115,17 +115,19 @@ func (w *gzipResponseWriter) Write(b []byte) (int, error) {
 
 func EnsureUserCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := utils.GetUserIDFromCookie(r)
-		if errors.Is(err, http.ErrNoCookie) || err == config.ErrTokenInvalid {
-			userID := uuid.New().String()
-			utils.SetJWTInCookie(w, userID)
-			logger.Infof("error in cookie is %v", err)
-			ctx := context.WithValue(r.Context(), config.UserContextKey, userID)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		} else if err != nil {
-			logger.Infof("error in cookie auth is %v", err)
-			http.Error(w, "Failed to Authorize", http.StatusUnauthorized)
-			return
+		userID, err := utils.GetUserIDFromCookie(r)
+		if err != nil {
+			if errors.Is(err, http.ErrNoCookie) || err == config.ErrTokenInvalid {
+				userID = uuid.New().String()
+				utils.SetJWTInCookie(w, userID)
+				logger.Infof("error in cookie is %v", err)
+			} else {
+				logger.Infof("error in cookie auth is %v", err)
+				http.Error(w, "Failed to Authorize", http.StatusUnauthorized)
+				return
+			}
 		}
+		ctx := context.WithValue(r.Context(), config.UserContextKey, userID)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
