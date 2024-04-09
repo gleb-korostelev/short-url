@@ -120,10 +120,10 @@ func EnsureUserCookie(next http.Handler) http.Handler {
 			if errors.Is(err, http.ErrNoCookie) || err == config.ErrTokenInvalid {
 				userID = uuid.New().String()
 				utils.SetJWTInCookie(w, userID)
-				logger.Infof("error in cookie is %v", err)
+				logger.Infof("Generated new user ID and set in cookie due to error: %v", err)
 			} else {
-				logger.Infof("error in cookie auth is %v", err)
-				http.Error(w, "Failed to Authorize", http.StatusUnauthorized)
+				logger.Infof("Failed to authorize due to error: %v", err)
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
 		}
