@@ -25,6 +25,7 @@ func (svc *APIService) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(urls) == 0 {
+		logger.Infof("userID is: ", userID)
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
