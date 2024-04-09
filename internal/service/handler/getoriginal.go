@@ -2,8 +2,10 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
+	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -15,8 +17,11 @@ func (svc *APIService) GetOriginal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	originalURL, err := svc.store.GetOriginalLink(context.Background(), id)
-
 	if err != nil {
+		if errors.Is(err, config.ErrGone) {
+			http.Error(w, config.ErrGone.Error(), http.StatusGone)
+			return
+		}
 		http.Error(w, "This URL doesn't exist", http.StatusBadRequest)
 		return
 	}

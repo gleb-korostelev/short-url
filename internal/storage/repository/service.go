@@ -8,27 +8,32 @@ import (
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/db"
 	"github.com/gleb-korostelev/short-url.git/internal/db/dbimpl"
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/gleb-korostelev/short-url.git/internal/models"
+	"github.com/gleb-korostelev/short-url.git/internal/service/utils"
 	"github.com/gleb-korostelev/short-url.git/internal/storage"
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"github.com/google/uuid"
 )
 
 type service struct {
-	data db.DatabaseI
+	data db.DB
 }
 
-func NewDBStorage(data db.DatabaseI) storage.Storage {
+func NewDBStorage(data db.DB) storage.Storage {
 	return &service{
 		data: data,
 	}
 }
 
-func (s *service) SaveUniqueURL(ctx context.Context, originalURL string) (string, int, error) {
-	shortURL := business.GenerateShortPath()
+func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID string) (string, int, error) {
+	shortURL := utils.GenerateShortPath()
 
-	uuid := uuid.New()
-	err := dbimpl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
+	uuid, err := uuid.Parse(userID)
+	if err != nil {
+		logger.Errorf("Error with parsing userId in database %v", err)
+		return "", http.StatusInternalServerError, err
+	}
+	err = dbimpl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
 	if err != nil {
 		if errors.Is(err, config.ErrExists) {
 			existingShortURL, err := dbimpl.GetShortURLByOriginalURL(s.data, originalURL)
@@ -42,13 +47,23 @@ func (s *service) SaveUniqueURL(ctx context.Context, originalURL string) (string
 	return config.BaseURL + "/" + shortURL, http.StatusCreated, nil
 }
 
-func (s *service) SaveURL(ctx context.Context, originalURL string) (string, error) {
-	shortURL := business.GenerateShortPath()
+func (s *service) SaveURL(ctx context.Context, originalURL string, userID string) (string, error) {
+	shortURL := utils.GenerateShortPath()
 
-	uuid := uuid.New()
-	err := dbimpl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
+	uuid, err := uuid.Parse(userID)
 	if err != nil {
-		logger.Errorf("Error with saving in database %v", err)
+		logger.Errorf("Error with parsing userId in database %v", err)
+		return "", err
+	}
+	err = dbimpl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
+	if err != nil {
+		if errors.Is(err, config.ErrExists) {
+			existingShortURL, err := dbimpl.GetShortURLByOriginalURL(s.data, originalURL)
+			if err != nil {
+				return "", err
+			}
+			return config.BaseURL + "/" + existingShortURL, nil
+		}
 		return "", err
 	}
 	return config.BaseURL + "/" + shortURL, nil
@@ -71,10 +86,25 @@ func (s *service) Ping(ctx context.Context) (int, error) {
 	}
 	return http.StatusOK, nil
 }
+
 func (s *service) Close() error {
 	err := s.data.Close()
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (s *service) GetAllURLS(ctx context.Context, userID, baseURL string) ([]models.UserURLs, error) {
+	res, err := dbimpl.GetOriginalURLsByUserID(s.data, userID, baseURL)
+	if err != nil {
+		logger.Errorf("Failed to get all user URLS %v", err)
+		return nil, err
+	}
+	return res, nil
+}
+
+func (s *service) MarkURLsAsDeleted(ctx context.Context, userID string, shortURLs []string) error {
+	dbimpl.MarkDeleted(s.data, userID, shortURLs)
 	return nil
 }

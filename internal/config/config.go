@@ -8,17 +8,25 @@ import (
 )
 
 const (
-	Letters              = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	Length               = 8
-	DefaultServerAddress = "localhost:8080"
-	DefaultBaseURL       = "http://localhost:8080"
-	DefaultFilePath      = "./tmp/short-url-db.json"
+	Letters               = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	Length                = 8
+	DefaultServerAddress  = "localhost:8080"
+	DefaultBaseURL        = "http://localhost:8080"
+	DefaultFilePath       = "./tmp/short-url-db.json"
+	TokenExpirationInHour = 24
+	MaxConcurrentUpdates  = 10
 )
 
+type contextKey string
+
+const UserContextKey = contextKey("user")
+
 var (
-	ErrExists    = errors.New("URL already exists")
-	ErrNotFound  = errors.New("URL doesn't exists")
-	ErrWrongMode = errors.New("wrong, non db mode")
+	ErrExists       = errors.New("URL already exists")
+	ErrNotFound     = errors.New("URL doesn't exists")
+	ErrWrongMode    = errors.New("wrong, non db mode")
+	ErrTokenInvalid = errors.New("token is not valid")
+	ErrGone         = errors.New("this link is gone")
 )
 
 var (
@@ -26,6 +34,7 @@ var (
 	BaseURL      string
 	BaseFilePath string
 	DBDSN        string
+	JwtKeySecret = "very-very-secret-key"
 )
 
 func ConfigInit() {
