@@ -114,10 +114,11 @@ func (w *gzipResponseWriter) Write(b []byte) (int, error) {
 func EnsureUserCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, err := utils.GetUserIDFromCookie(r)
-		if (errors.Is(err, http.ErrNoCookie) || err == config.ErrTokenInvalid) && r.Context().Value(config.UserContextKey) == nil {
+		if errors.Is(err, http.ErrNoCookie) || err == config.ErrTokenInvalid {
 			userID = uuid.New().String()
 			utils.SetJWTInCookie(w, userID)
 			logger.Infof("error in cookie is %v", err)
+			return
 		} else if err != nil {
 			logger.Infof("error in cookie auth is %v", err)
 			http.Error(w, "Failed to Authorize", http.StatusUnauthorized)
