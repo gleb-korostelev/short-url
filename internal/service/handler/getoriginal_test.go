@@ -6,10 +6,14 @@ import (
 	"testing"
 
 	"github.com/gleb-korostelev/short-url.git/internal/cache"
+	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/models"
 	"github.com/gleb-korostelev/short-url.git/internal/storage/repository"
+	"github.com/gleb-korostelev/short-url.git/internal/worker"
 	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 )
 
 func TestGetOriginal(t *testing.T) {
@@ -18,7 +22,9 @@ func TestGetOriginal(t *testing.T) {
 	mockdb := mock_db.NewMockDatabaseI(ctrl)
 	r := chi.NewRouter()
 	store := repository.NewDBStorage(mockdb)
-	svc := NewAPIService(store)
+	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
+
+	svc := NewAPIService(store, workerPool)
 	r.Get("/{id}", svc.GetOriginal)
 
 	ts := httptest.NewServer(r)
@@ -26,7 +32,12 @@ func TestGetOriginal(t *testing.T) {
 
 	testShort := "testID"
 	testURL := "https://example.com"
-	cache.Cache[testShort] = testURL
+	var testdata models.URLData
+	testdata.OriginalURL = testURL
+	testdata.ShortURL = testShort
+	testdata.UUID = uuid.New()
+	cache.Cache[testURL] = testdata
+	// cache.Cache = append(cache.Cache, testdata)
 
 	t.Run("Unsupported Method", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/"+testShort, nil)

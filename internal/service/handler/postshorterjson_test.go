@@ -5,7 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/storage/repository"
+	"github.com/gleb-korostelev/short-url.git/internal/worker"
 	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
 	"github.com/golang/mock/gomock"
 )
@@ -16,7 +18,9 @@ func TestPostShorterJSON(t *testing.T) {
 	mockdb := mock_db.NewMockDatabaseI(ctrl)
 
 	store := repository.NewDBStorage(mockdb)
-	svc := NewAPIService(store)
+	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
+
+	svc := NewAPIService(store, workerPool)
 
 	t.Run("Unsupported Method", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/api/shorten", nil)

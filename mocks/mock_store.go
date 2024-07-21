@@ -11,6 +11,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	pgx "github.com/jackc/pgx/v5"
 	pgconn "github.com/jackc/pgx/v5/pgconn"
+	pgxpool "github.com/jackc/pgx/v5/pgxpool"
 )
 
 // MockDatabaseI is a mock of DatabaseI interface.
@@ -71,10 +72,10 @@ func (mr *MockDatabaseIMockRecorder) Exec(ctx, query interface{}, args ...interf
 }
 
 // GetConn mocks base method.
-func (m *MockDatabaseI) GetConn(ctx context.Context) *pgx.Conn {
+func (m *MockDatabaseI) GetConn(ctx context.Context) *pgxpool.Pool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetConn", ctx)
-	ret0, _ := ret[0].(*pgx.Conn)
+	ret0, _ := ret[0].(*pgxpool.Pool)
 	return ret0
 }
 
@@ -99,7 +100,7 @@ func (mr *MockDatabaseIMockRecorder) Ping(ctx interface{}) *gomock.Call {
 }
 
 // Query mocks base method.
-func (m *MockDatabaseI) Query(ctx context.Context, query string, args ...interface{}) pgx.Rows {
+func (m *MockDatabaseI) Query(ctx context.Context, query string, args ...interface{}) (pgx.Rows, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, query}
 	for _, a := range args {
@@ -107,7 +108,8 @@ func (m *MockDatabaseI) Query(ctx context.Context, query string, args ...interfa
 	}
 	ret := m.ctrl.Call(m, "Query", varargs...)
 	ret0, _ := ret[0].(pgx.Rows)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Query indicates an expected call of Query.

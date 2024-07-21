@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/models"
 )
 
@@ -16,13 +17,18 @@ func (svc *APIService) PostShorterJSON(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
+	userID, ok := r.Context().Value(config.UserContextKey).(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 	var payload models.URLPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	shortURL, status, err := svc.store.SaveUniqueURL(context.Background(), payload.URL)
+	shortURL, status, err := svc.store.SaveUniqueURL(context.Background(), payload.URL, userID)
 	w.WriteHeader(status)
 	if err != nil {
 		http.Error(w, "Error with saving", http.StatusBadRequest)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/models"
-	"github.com/gleb-korostelev/short-url.git/internal/service/business"
+	"github.com/gleb-korostelev/short-url.git/internal/service/utils"
 	"github.com/gleb-korostelev/short-url.git/internal/storage"
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"github.com/google/uuid"
@@ -22,29 +22,42 @@ func NewFileStorage(path string) storage.Storage {
 	}
 }
 
-func (s *service) SaveUniqueURL(ctx context.Context, originalURL string) (string, int, error) {
+func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID string) (string, int, error) {
+	shortURL := utils.GenerateShortPath()
 
-	shortURL := business.GenerateShortPath()
+	uuid, err := uuid.Parse(userID)
+	if err != nil {
+		logger.Errorf("Error with parsing userId in file %v", err)
+		return "", http.StatusBadRequest, err
+	}
 
 	var save models.URLData
 	save.OriginalURL = originalURL
 	save.ShortURL = shortURL
-	save.UUID = uuid.New()
-	err := business.SaveURLs(save)
+	save.UUID = uuid
+	save.DeletedFlag = false
+	err = utils.SaveURLs(save)
 	if err != nil {
 		return "", http.StatusBadRequest, err
 	}
 	return config.BaseURL + "/" + shortURL, http.StatusCreated, nil
 }
 
-func (s *service) SaveURL(ctx context.Context, originalURL string) (string, error) {
-	shortURL := business.GenerateShortPath()
+func (s *service) SaveURL(ctx context.Context, originalURL string, userID string) (string, error) {
+	shortURL := utils.GenerateShortPath()
+
+	uuid, err := uuid.Parse(userID)
+	if err != nil {
+		logger.Errorf("Error with parsing userId in file %v", err)
+		return "", err
+	}
 
 	var save models.URLData
 	save.OriginalURL = originalURL
 	save.ShortURL = shortURL
-	save.UUID = uuid.New()
-	err := business.SaveURLs(save)
+	save.UUID = uuid
+	save.DeletedFlag = false
+	err = utils.SaveURLs(save)
 	if err != nil {
 		logger.Errorf("Error with saving in file %v", err)
 		return "", err
@@ -53,7 +66,7 @@ func (s *service) SaveURL(ctx context.Context, originalURL string) (string, erro
 }
 
 func (s *service) GetOriginalLink(ctx context.Context, shortURL string) (string, error) {
-	originalURL, err := business.LoadURLs(s.path, shortURL)
+	originalURL, err := utils.LoadURLs(s.path, shortURL)
 	if err != nil {
 		return "", err
 	}
@@ -67,4 +80,18 @@ func (s *service) Ping(ctx context.Context) (int, error) {
 
 func (s *service) Close() error {
 	return nil
+}
+
+func (s *service) GetAllURLS(ctx context.Context, userID, baseURL string) ([]models.UserURLs, error) {
+	res, err := utils.LoadUserURLs(config.BaseFilePath, userID)
+	if err != nil {
+		logger.Errorf("Failed to get all user URLS %v", err)
+		return nil, err
+	}
+	return res, nil
+}
+
+func (s *service) MarkURLsAsDeleted(ctx context.Context, userID string, shortURLs []string) error {
+	err := utils.MarkURLsAsDeletedInFile(config.BaseURL, userID, shortURLs)
+	return err
 }

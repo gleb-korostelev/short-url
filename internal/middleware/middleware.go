@@ -2,30 +2,38 @@ package middleware
 
 import (
 	"compress/gzip"
+	"context"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/service/utils"
+	"github.com/gleb-korostelev/short-url.git/tools/logger"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
-func LoggingMiddleware(next http.HandlerFunc, logger *zap.Logger) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
+func LoggingMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
 
-		ww := &responseWriter{ResponseWriter: w}
+			ww := &responseWriter{ResponseWriter: w}
 
-		next.ServeHTTP(ww, r)
+			next.ServeHTTP(ww, r)
 
-		logger.Info("request",
-			zap.String("method", r.Method),
-			zap.String("uri", r.RequestURI),
-			zap.Int("status", ww.status),
-			zap.Int("response_size", ww.size),
-			zap.Duration("duration", time.Since(start)),
-		)
-	})
+			logger.Info("request",
+				zap.String("method", r.Method),
+				zap.String("uri", r.RequestURI),
+				zap.Int("status", ww.status),
+				zap.Int("response_size", ww.size),
+				zap.Duration("duration", time.Since(start)),
+			)
+		})
+	}
 }
 
 func GzipCompressMiddleware(next http.Handler) http.Handler {
@@ -103,4 +111,23 @@ func (w *gzipResponseWriter) Write(b []byte) (int, error) {
 		w.WriteHeader(http.StatusOK)
 	}
 	return w.Writer.Write(b)
+}
+
+func EnsureUserCookie(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID, err := utils.GetUserIDFromCookie(r)
+		if err != nil {
+			if errors.Is(err, http.ErrNoCookie) || err == config.ErrTokenInvalid {
+				userID = uuid.New().String()
+				utils.SetJWTInCookie(w, userID)
+				logger.Infof("Generated new user ID and set in cookie due to error: %v", err)
+			} else {
+				logger.Infof("Failed to authorize due to error: %v", err)
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+		}
+		ctx := context.WithValue(r.Context(), config.UserContextKey, userID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
