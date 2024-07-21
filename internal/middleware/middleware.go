@@ -20,18 +20,17 @@ func LoggingMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-
 			ww := &responseWriter{ResponseWriter: w}
-
 			next.ServeHTTP(ww, r)
-
-			logger.Info("request",
-				zap.String("method", r.Method),
-				zap.String("uri", r.RequestURI),
-				zap.Int("status", ww.status),
-				zap.Int("response_size", ww.size),
-				zap.Duration("duration", time.Since(start)),
-			)
+			go func() {
+				logger.Info("request",
+					zap.String("method", r.Method),
+					zap.String("uri", r.RequestURI),
+					zap.Int("status", ww.status),
+					zap.Int("response_size", ww.size),
+					zap.Duration("duration", time.Since(start)),
+				)
+			}()
 		})
 	}
 }
@@ -101,12 +100,11 @@ func (w *gzipResponseWriter) Write(b []byte) (int, error) {
 		contentType := w.Header().Get("Content-Type")
 		if strings.HasPrefix(contentType, "application/json") || strings.HasPrefix(contentType, "text/html") {
 			w.Header().Set("Content-Encoding", "gzip")
-			w.Writer = gzip.NewWriter(w.ResponseWriter)
-			defer func() {
-				if w.Writer != nil {
-					w.Writer.(*gzip.Writer).Close()
-				}
-			}()
+			gz := gzip.NewWriter(w.ResponseWriter)
+			defer gz.Close()
+			w.Writer = gz
+		} else {
+			w.Writer = w.ResponseWriter
 		}
 		w.WriteHeader(http.StatusOK)
 	}

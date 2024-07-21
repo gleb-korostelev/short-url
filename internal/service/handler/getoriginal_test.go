@@ -16,6 +16,23 @@ import (
 	"github.com/google/uuid"
 )
 
+func BenchmarkProcessURLs(b *testing.B) {
+	ctrl := gomock.NewController(b)
+	defer ctrl.Finish()
+	mockdb := mock_db.NewMockDatabaseI(ctrl)
+	store := repository.NewDBStorage(mockdb)
+	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
+
+	svc := NewAPIService(store, workerPool)
+
+	testShort := "testID"
+
+	request, _ := http.NewRequest(http.MethodPost, "/"+testShort, nil)
+	responseRecorder := httptest.NewRecorder()
+
+	svc.GetOriginal(responseRecorder, request)
+}
+
 func TestGetOriginal(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
