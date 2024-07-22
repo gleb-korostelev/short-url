@@ -76,7 +76,8 @@ func TestGetUserURLs(t *testing.T) {
 			defer response.Body.Close()
 
 			utils.SetJWTInCookie(rr, tc.userID)
-			if cookies := rr.Result().Cookies(); len(cookies) > 0 {
+			cookies := rr.Result().Cookies()
+			if len(cookies) > 0 {
 				req.AddCookie(cookies[0])
 			}
 
