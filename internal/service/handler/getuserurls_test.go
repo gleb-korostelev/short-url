@@ -78,6 +78,9 @@ func TestGetUserURLs(t *testing.T) {
 
 			svc.GetUserURLs(rr, req)
 
+			response := rr.Result()
+			defer response.Body.Close()
+
 			assert.Equal(t, tc.expectedStatus, rr.Code)
 			if tc.expectedBody != "" {
 				body := rr.Body.String()
