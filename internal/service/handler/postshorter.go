@@ -55,9 +55,9 @@ func (svc *APIService) PostShorter(w http.ResponseWriter, r *http.Request) {
 	svc.worker.AddTask(worker.Task{
 		Action: func(ctx context.Context) error {
 			shortURL, status, err := svc.store.SaveUniqueURL(ctx, originalURL, userID)
+			w.WriteHeader(status)
 			if err != nil {
 				logger.Errorf("Error with saving data: %v", err)
-				w.WriteHeader(status)
 				return nil
 			}
 			// Write the shortened URL to the response.
