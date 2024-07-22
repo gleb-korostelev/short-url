@@ -68,6 +68,7 @@ func TestGetUserURLs(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			req, _ := http.NewRequest("GET", "/user/urls", nil)
 			rr := httptest.NewRecorder()
+			defer httptest.NewRecorder().Result().Body.Close()
 
 			utils.SetJWTInCookie(rr, tc.userID)
 			if cookies := rr.Result().Cookies(); len(cookies) > 0 {
