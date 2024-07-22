@@ -1,3 +1,5 @@
+// Package middleware contains HTTP middleware functions that enhance the HTTP server functionality.
+// These middlewares provide logging, compression, decompression, and user authentication handling.
 package middleware
 
 import (
@@ -16,25 +18,27 @@ import (
 	"go.uber.org/zap"
 )
 
+// LoggingMiddleware logs the HTTP request details including method, URI, status code, response size, and duration.
+// It uses the zap.Logger for structured logging.
 func LoggingMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 			ww := &responseWriter{ResponseWriter: w}
 			next.ServeHTTP(ww, r)
-			go func() {
-				logger.Info("request",
-					zap.String("method", r.Method),
-					zap.String("uri", r.RequestURI),
-					zap.Int("status", ww.status),
-					zap.Int("response_size", ww.size),
-					zap.Duration("duration", time.Since(start)),
-				)
-			}()
+			go logger.Info("request",
+				zap.String("method", r.Method),
+				zap.String("uri", r.RequestURI),
+				zap.Int("status", ww.status),
+				zap.Int("response_size", ww.size),
+				zap.Duration("duration", time.Since(start)),
+			)
 		})
 	}
 }
 
+// GzipCompressMiddleware applies Gzip compression to HTTP responses if the client supports it.
+// It checks the Accept-Encoding header for 'gzip' and wraps the response writer to compress the output.
 func GzipCompressMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
@@ -45,6 +49,8 @@ func GzipCompressMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// GzipDecompressMiddleware handles Gzip-compressed request bodies.
+// It checks the Content-Encoding header for 'gzip' and decompresses the body if necessary.
 func GzipDecompressMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Content-Encoding") == "gzip" {
@@ -61,6 +67,7 @@ func GzipDecompressMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// responseWriter is a custom http.ResponseWriter that captures HTTP status codes and response sizes for logging.
 type responseWriter struct {
 	http.ResponseWriter
 	status int
@@ -81,6 +88,7 @@ func (w *responseWriter) Write(b []byte) (int, error) {
 	return size, err
 }
 
+// gzipResponseWriter is an enhanced http.ResponseWriter that supports Gzip compression.
 type gzipResponseWriter struct {
 	io.Writer
 	http.ResponseWriter
@@ -111,6 +119,9 @@ func (w *gzipResponseWriter) Write(b []byte) (int, error) {
 	return w.Writer.Write(b)
 }
 
+// EnsureUserCookie checks for a valid user ID from cookies.
+// If not found, it generates a new user ID, sets it in a cookie, and logs the error.
+// It authorizes users by ensuring a valid user ID is present or created.
 func EnsureUserCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, err := utils.GetUserIDFromCookie(r)

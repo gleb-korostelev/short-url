@@ -1,19 +1,20 @@
 package handler
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gleb-korostelev/short-url.git/internal/cache"
 	"github.com/gleb-korostelev/short-url.git/internal/config"
-	"github.com/gleb-korostelev/short-url.git/internal/models"
 	"github.com/gleb-korostelev/short-url.git/internal/storage/repository"
 	"github.com/gleb-korostelev/short-url.git/internal/worker"
 	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
-	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func BenchmarkProcessURLs(b *testing.B) {
@@ -33,48 +34,79 @@ func BenchmarkProcessURLs(b *testing.B) {
 	svc.GetOriginal(responseRecorder, request)
 }
 
+// MockStore - mock for Storage interface.
+type MockStore struct {
+	mock.Mock
+}
+
+func (m *MockStore) GetOriginalLink(ctx context.Context, id string) (string, error) {
+	args := m.Called(ctx, id)
+	return args.String(0), args.Error(1)
+}
+
 func TestGetOriginal(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockdb := mock_db.NewMockDatabaseI(ctrl)
-	r := chi.NewRouter()
-	store := repository.NewDBStorage(mockdb)
-	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
 
-	svc := NewAPIService(store, workerPool)
+	mockStorage := mock_db.NewMockStorage(ctrl)
+	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
+	svc := NewAPIService(mockStorage, workerPool)
+
+	r := chi.NewRouter()
 	r.Get("/{id}", svc.GetOriginal)
 
-	ts := httptest.NewServer(r)
-	defer ts.Close()
+	tests := []struct {
+		name         string
+		id           string
+		mockResponse string
+		mockError    error
+		expectedCode int
+		expectedLoc  string
+	}{
+		{
+			name:         "Valid ID",
+			id:           "123",
+			mockResponse: "http://original.url/example",
+			mockError:    nil,
+			expectedCode: http.StatusTemporaryRedirect,
+			expectedLoc:  "http://original.url/example",
+		},
+		{
+			name:         "URL Gone",
+			id:           "gone",
+			mockResponse: "",
+			mockError:    config.ErrGone,
+			expectedCode: http.StatusGone,
+			expectedLoc:  "",
+		},
+		{
+			name:         "Invalid ID",
+			id:           "invalid",
+			mockResponse: "",
+			mockError:    errors.New("not found"),
+			expectedCode: http.StatusBadRequest,
+			expectedLoc:  "",
+		},
+	}
 
-	testShort := "testID"
-	testURL := "https://example.com"
-	var testdata models.URLData
-	testdata.OriginalURL = testURL
-	testdata.ShortURL = testShort
-	testdata.UUID = uuid.New()
-	cache.Cache[testURL] = testdata
-	// cache.Cache = append(cache.Cache, testdata)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest("GET", "/"+tt.id, nil)
+			assert.NoError(t, err)
 
-	t.Run("Unsupported Method", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPost, "/"+testShort, nil)
-		responseRecorder := httptest.NewRecorder()
+			rr := httptest.NewRecorder()
 
-		svc.GetOriginal(responseRecorder, request)
+			mockStorage.EXPECT().
+				GetOriginalLink(gomock.Any(), tt.id).
+				Return(tt.mockResponse, tt.mockError).
+				Times(1)
 
-		if status := responseRecorder.Code; status != http.StatusBadRequest {
-			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusBadRequest)
-		}
-	})
+			r.ServeHTTP(rr, req)
 
-	t.Run("Error code is not BadRequest", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/", nil)
-		responseRecorder := httptest.NewRecorder()
-
-		svc.GetOriginal(responseRecorder, request)
-
-		if status := responseRecorder.Code; status != http.StatusBadRequest {
-			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusBadRequest)
-		}
-	})
+			assert.Equal(t, tt.expectedCode, rr.Code)
+			if tt.expectedLoc != "" {
+				assert.Equal(t, tt.expectedLoc, rr.Header().Get("Location"))
+			}
+		})
+	}
 }

@@ -1,45 +1,100 @@
 package handler
 
 import (
+	"bytes"
+	"context"
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
-	"github.com/gleb-korostelev/short-url.git/internal/storage/repository"
 	"github.com/gleb-korostelev/short-url.git/internal/worker"
 	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPostShorter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockdb := mock_db.NewMockDatabaseI(ctrl)
-	store := repository.NewDBStorage(mockdb)
+
+	mockStore := mock_db.NewMockStorage(ctrl)
 	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
+	svc := &APIService{store: mockStore, worker: workerPool}
 
-	svc := NewAPIService(store, workerPool)
+	tests := []struct {
+		name           string
+		method         string
+		userID         string
+		body           io.Reader
+		setupMocks     func()
+		expectedStatus int
+		expectedBody   string
+	}{
+		{
+			name:           "Invalid Method",
+			method:         "GET",
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   "Only POST method is allowed\n",
+		},
+		{
+			name:           "Unauthorized Access",
+			method:         "POST",
+			body:           bytes.NewReader([]byte("http://example.com")),
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:           "Error Reading Body",
+			method:         "POST",
+			body:           errReader{errors.New("mock read error")},
+			userID:         "valid-user-id",
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   "Error reading request body\n",
+		},
+		{
+			name:   "Successful Shorten",
+			method: "POST",
+			body:   bytes.NewReader([]byte("http://example.com")),
+			userID: "valid-user-id",
+			setupMocks: func() {
+				mockStore.EXPECT().SaveUniqueURL(gomock.Any(), "http://example.com", "valid-user-id").Return("http://short.url", http.StatusCreated, nil)
+			},
+			expectedStatus: http.StatusCreated,
+			expectedBody:   "http://short.url",
+		},
+	}
 
-	t.Run("Unsupported Method", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/", nil)
-		responseRecorder := httptest.NewRecorder()
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req, _ := http.NewRequest(tc.method, "/shorten", tc.body)
+			if tc.userID != "" {
+				ctx := context.WithValue(req.Context(), config.UserContextKey, tc.userID)
+				req = req.WithContext(ctx)
+			}
+			rr := httptest.NewRecorder()
 
-		svc.PostShorter(responseRecorder, request)
+			if tc.setupMocks != nil {
+				tc.setupMocks()
+			}
 
-		if status := responseRecorder.Code; status != http.StatusBadRequest {
-			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusBadRequest)
-		}
-	})
+			svc.PostShorter(rr, req)
 
-	t.Run("Error code is not BadRequest", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPost, "/test", nil)
-		responseRecorder := httptest.NewRecorder()
+			assert.Equal(t, tc.expectedStatus, rr.Code)
+			if tc.expectedBody != "" {
+				responseBody := rr.Body.String()
+				assert.Equal(t, tc.expectedBody, responseBody)
+			}
+		})
+	}
+}
 
-		svc.GetOriginal(responseRecorder, request)
+// errReader helps simulate an error while reading the request body.
+type errReader struct {
+	err error
+}
 
-		if status := responseRecorder.Code; status != http.StatusBadRequest {
-			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusBadRequest)
-		}
-	})
+func (e errReader) Read(p []byte) (n int, err error) {
+	return 0, e.err
 }
