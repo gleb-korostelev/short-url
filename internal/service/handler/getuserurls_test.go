@@ -69,7 +69,7 @@ func TestGetUserURLs(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			req, _ := http.NewRequest("GET", "/user/urls", nil)
+			req, _ := http.NewRequest("GET", "/api/user/urls", nil)
 			rr := httptest.NewRecorder()
 
 			utils.SetJWTInCookie(rr, tc.userID)

@@ -69,7 +69,7 @@ func TestPostShorter(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			req, _ := http.NewRequest(tc.method, "/shorten", tc.body)
+			req, _ := http.NewRequest(tc.method, "/", tc.body)
 			if tc.userID != "" {
 				ctx := context.WithValue(req.Context(), config.UserContextKey, tc.userID)
 				req = req.WithContext(ctx)

@@ -76,7 +76,7 @@ func TestShortenBatchHandler(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			body, _ := json.Marshal(tc.requestBody)
-			req, _ := http.NewRequest("POST", "/batch", bytes.NewBuffer(body))
+			req, _ := http.NewRequest("POST", "/api/shorten/batch", bytes.NewBuffer(body))
 			if tc.userID != "" {
 				ctx := context.WithValue(req.Context(), config.UserContextKey, tc.userID)
 				req = req.WithContext(ctx)

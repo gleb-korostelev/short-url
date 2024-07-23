@@ -65,7 +65,7 @@ func TestDeleteURLsHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, _ := http.NewRequest("DELETE", "/delete", tt.body)
+			req, _ := http.NewRequest("DELETE", "/api/user/urls", tt.body)
 			req = req.WithContext(tt.context)
 			rr := httptest.NewRecorder()
 

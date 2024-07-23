@@ -83,7 +83,7 @@ func TestPostShorterJSON(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			req, _ := http.NewRequest(tc.method, "/shorten-json", bytes.NewBufferString(tc.requestBody))
+			req, _ := http.NewRequest(tc.method, "/api/shorten", bytes.NewBufferString(tc.requestBody))
 			if tc.userID != "" {
 				ctx := context.WithValue(req.Context(), config.UserContextKey, tc.userID)
 				req = req.WithContext(ctx)
