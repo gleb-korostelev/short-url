@@ -28,7 +28,7 @@ func ExampleAPIService_GetOriginal() {
 	server := httptest.NewServer(http.HandlerFunc(apiService.GetOriginal))
 	defer server.Close()
 
-	resp, err := http.Get(server.URL + "/get_original?id=123")
+	resp, err := http.Get(server.URL + "/{123}")
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
@@ -47,7 +47,7 @@ func ExampleAPIService_PostShorter() {
 	server := httptest.NewServer(http.HandlerFunc(apiService.PostShorter))
 	defer server.Close()
 
-	resp, err := http.Post(server.URL+"/post_shorter", "application/text", strings.NewReader("http://example.com"))
+	resp, err := http.Post(server.URL+"/", "application/text", strings.NewReader("http://example.com"))
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
@@ -69,7 +69,7 @@ func ExampleAPIService_DeleteURLsHandler() {
 
 	urlsToDelete := []string{"short1", "short2"}
 	body, _ := json.Marshal(urlsToDelete)
-	req := httptest.NewRequest("DELETE", "/delete-urls", bytes.NewBuffer(body))
+	req := httptest.NewRequest("DELETE", "/api/user/urls", bytes.NewBuffer(body))
 	req = req.WithContext(context.WithValue(req.Context(), config.UserContextKey, "user-123"))
 
 	rr := httptest.NewRecorder()
@@ -97,7 +97,7 @@ func ExampleAPIService_GetUserURLs() {
 
 	svc := handler.NewAPIService(mockStore, workerPool)
 
-	req := httptest.NewRequest("GET", "/user/urls", nil)
+	req := httptest.NewRequest("GET", "/api/user/urls", nil)
 
 	rr := httptest.NewRecorder()
 	utils.SetJWTInCookie(rr, "user-123")
@@ -137,4 +137,55 @@ func ExampleAPIService_Ping() {
 	defer response.Body.Close()
 
 	fmt.Println("HTTP Status:", response.StatusCode)
+}
+
+func ExampleAPIService_PostShorterJSON() {
+	ctrl := gomock.NewController(nil)
+	defer ctrl.Finish()
+
+	mockStore := mock_db.NewMockStorage(ctrl)
+	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
+	svc := handler.NewAPIService(mockStore, workerPool)
+
+	payload := models.URLPayload{
+		URL: "https://example.com",
+	}
+	jsonPayload, _ := json.Marshal(payload)
+
+	req, _ := http.NewRequest("POST", "/api/shorten", bytes.NewBuffer(jsonPayload))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(context.Background(), config.UserContextKey, "test-user-id"))
+
+	rr := httptest.NewRecorder()
+
+	svc.PostShorterJSON(rr, req)
+
+	fmt.Printf("Status Code: %d\n", rr.Code)
+	fmt.Printf("Body: %s\n", rr.Body.String())
+}
+
+func ExampleAPIService_ShortenBatchHandler() {
+	ctrl := gomock.NewController(nil)
+	defer ctrl.Finish()
+
+	mockStore := mock_db.NewMockStorage(ctrl)
+	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
+	svc := handler.NewAPIService(mockStore, workerPool)
+
+	batchRequest := []models.ShortenBatchRequestItem{
+		{CorrelationID: "1", OriginalURL: "https://example.com"},
+		{CorrelationID: "2", OriginalURL: "https://example.org"},
+	}
+	jsonBody, _ := json.Marshal(batchRequest)
+
+	req, _ := http.NewRequest("POST", "/api/shorten/batch", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(context.Background(), config.UserContextKey, "test-user-id"))
+
+	rr := httptest.NewRecorder()
+
+	svc.ShortenBatchHandler(rr, req)
+
+	fmt.Printf("Status Code: %d\n", rr.Code)
+	fmt.Printf("Body: %s\n", rr.Body.String())
 }
