@@ -7,7 +7,6 @@ import (
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/models"
-	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -105,6 +104,6 @@ func GetUserIDFromCookie(r *http.Request) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	logger.Info("Successfully authorized: ", claims.UserID)
+	// logger.Info("Successfully authorized: ", claims.UserID)
 	return claims.UserID, nil
 }

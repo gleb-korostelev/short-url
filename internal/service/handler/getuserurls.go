@@ -26,7 +26,7 @@ func (svc *APIService) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Infof("Retrieved userID is: %s", userID)
+	// logger.Infof("Retrieved userID is: %s", userID)
 
 	// Fetch all URLs associated with the user ID from the storage.
 	urls, err := svc.store.GetAllURLS(context.Background(), userID, config.BaseURL)
