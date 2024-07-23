@@ -3,9 +3,9 @@
 package handler
 
 import (
-	"github.com/gleb-korostelev/short-url.git/internal/service"
-	"github.com/gleb-korostelev/short-url.git/internal/storage"
-	"github.com/gleb-korostelev/short-url.git/internal/worker"
+	"github.com/gleb-korostelev/short-url/internal/service"
+	"github.com/gleb-korostelev/short-url/internal/storage"
+	"github.com/gleb-korostelev/short-url/internal/worker"
 )
 
 // APIService implements the service.APIServiceI interface and provides methods

@@ -1,4 +1,4 @@
-package handler
+package handler_test
 
 import (
 	"errors"
@@ -9,10 +9,12 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gleb-korostelev/short-url.git/internal/config"
-	"github.com/gleb-korostelev/short-url.git/internal/models"
-	"github.com/gleb-korostelev/short-url.git/internal/service/utils"
-	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
+	"github.com/gleb-korostelev/short-url/internal/config"
+	"github.com/gleb-korostelev/short-url/internal/models"
+	"github.com/gleb-korostelev/short-url/internal/service/handler"
+	"github.com/gleb-korostelev/short-url/internal/service/utils"
+	"github.com/gleb-korostelev/short-url/internal/worker"
+	mock_db "github.com/gleb-korostelev/short-url/mocks"
 )
 
 func TestGetUserURLs(t *testing.T) {
@@ -20,7 +22,8 @@ func TestGetUserURLs(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockStore := mock_db.NewMockStorage(ctrl)
-	svc := &APIService{store: mockStore}
+	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
+	svc := handler.NewAPIService(mockStore, workerPool)
 
 	tests := []struct {
 		name            string

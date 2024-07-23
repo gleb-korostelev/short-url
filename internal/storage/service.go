@@ -6,7 +6,7 @@ package storage
 import (
 	"context"
 
-	"github.com/gleb-korostelev/short-url.git/internal/models"
+	"github.com/gleb-korostelev/short-url/internal/models"
 )
 
 // Storage is the interface that defines the methods required to store, retrieve, and manage URLs.

@@ -1,4 +1,4 @@
-package handler
+package handler_test
 
 import (
 	"bytes"
@@ -11,9 +11,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gleb-korostelev/short-url.git/internal/config"
-	"github.com/gleb-korostelev/short-url.git/internal/models"
-	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
+	"github.com/gleb-korostelev/short-url/internal/config"
+	"github.com/gleb-korostelev/short-url/internal/models"
+	"github.com/gleb-korostelev/short-url/internal/service/handler"
+	"github.com/gleb-korostelev/short-url/internal/worker"
+	mock_db "github.com/gleb-korostelev/short-url/mocks"
 )
 
 func TestShortenBatchHandler(t *testing.T) {
@@ -21,7 +23,8 @@ func TestShortenBatchHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockStore := mock_db.NewMockStorage(ctrl)
-	svc := &APIService{store: mockStore}
+	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
+	svc := handler.NewAPIService(mockStore, workerPool)
 
 	tests := []struct {
 		name            string

@@ -1,4 +1,4 @@
-package handler
+package handler_test
 
 import (
 	"bytes"
@@ -9,9 +9,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gleb-korostelev/short-url.git/internal/config"
-	"github.com/gleb-korostelev/short-url.git/internal/worker"
-	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
+	"github.com/gleb-korostelev/short-url/internal/config"
+	"github.com/gleb-korostelev/short-url/internal/service/handler"
+	"github.com/gleb-korostelev/short-url/internal/worker"
+	mock_db "github.com/gleb-korostelev/short-url/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +23,7 @@ func TestPostShorter(t *testing.T) {
 
 	mockStore := mock_db.NewMockStorage(ctrl)
 	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
-	svc := &APIService{store: mockStore, worker: workerPool}
+	svc := handler.NewAPIService(mockStore, workerPool)
 
 	tests := []struct {
 		name           string

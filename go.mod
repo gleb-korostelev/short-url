@@ -1,4 +1,4 @@
-module github.com/gleb-korostelev/short-url.git
+module github.com/gleb-korostelev/short-url
 
 go 1.22
 

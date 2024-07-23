@@ -1,4 +1,4 @@
-package handler
+package handler_test
 
 import (
 	"context"
@@ -7,10 +7,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gleb-korostelev/short-url.git/internal/config"
-	"github.com/gleb-korostelev/short-url.git/internal/storage/repository"
-	"github.com/gleb-korostelev/short-url.git/internal/worker"
-	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
+	"github.com/gleb-korostelev/short-url/internal/config"
+	"github.com/gleb-korostelev/short-url/internal/service/handler"
+	"github.com/gleb-korostelev/short-url/internal/storage/repository"
+	"github.com/gleb-korostelev/short-url/internal/worker"
+	mock_db "github.com/gleb-korostelev/short-url/mocks"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -24,7 +25,7 @@ func BenchmarkProcessURLs(b *testing.B) {
 	store := repository.NewDBStorage(mockdb)
 	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
 
-	svc := NewAPIService(store, workerPool)
+	svc := handler.NewAPIService(store, workerPool)
 
 	testShort := "testID"
 
@@ -50,7 +51,7 @@ func TestGetOriginal(t *testing.T) {
 
 	mockStorage := mock_db.NewMockStorage(ctrl)
 	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
-	svc := NewAPIService(mockStorage, workerPool)
+	svc := handler.NewAPIService(mockStorage, workerPool)
 
 	r := chi.NewRouter()
 	r.Get("/{id}", svc.GetOriginal)

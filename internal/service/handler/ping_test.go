@@ -1,4 +1,4 @@
-package handler
+package handler_test
 
 import (
 	"context"
@@ -7,7 +7,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
+	"github.com/gleb-korostelev/short-url/internal/config"
+	"github.com/gleb-korostelev/short-url/internal/service/handler"
+	"github.com/gleb-korostelev/short-url/internal/worker"
+	mock_db "github.com/gleb-korostelev/short-url/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +20,8 @@ func TestPing(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockStore := mock_db.NewMockStorage(ctrl)
-	svc := &APIService{store: mockStore}
+	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
+	svc := handler.NewAPIService(mockStore, workerPool)
 
 	tests := []struct {
 		name         string

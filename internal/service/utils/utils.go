@@ -5,7 +5,7 @@ package utils
 import (
 	"math/rand"
 
-	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url/internal/config"
 )
 
 // GenerateShortPath generates a random string of a predefined length using a specified

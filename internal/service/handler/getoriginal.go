@@ -7,7 +7,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url/internal/config"
 	"github.com/go-chi/chi/v5"
 )
 

@@ -4,17 +4,17 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
-	"github.com/gleb-korostelev/short-url.git/internal/cache"
-	"github.com/gleb-korostelev/short-url.git/internal/config"
-	"github.com/gleb-korostelev/short-url.git/internal/db/dbimpl"
-	"github.com/gleb-korostelev/short-url.git/internal/service/handler"
-	"github.com/gleb-korostelev/short-url.git/internal/service/router"
-	"github.com/gleb-korostelev/short-url.git/internal/storage"
-	"github.com/gleb-korostelev/short-url.git/internal/storage/filecache"
-	"github.com/gleb-korostelev/short-url.git/internal/storage/inmemory"
-	"github.com/gleb-korostelev/short-url.git/internal/storage/repository"
-	"github.com/gleb-korostelev/short-url.git/internal/worker"
-	"github.com/gleb-korostelev/short-url.git/tools/logger"
+	"github.com/gleb-korostelev/short-url/internal/cache"
+	"github.com/gleb-korostelev/short-url/internal/config"
+	"github.com/gleb-korostelev/short-url/internal/db/dbimpl"
+	"github.com/gleb-korostelev/short-url/internal/service/handler"
+	"github.com/gleb-korostelev/short-url/internal/service/router"
+	"github.com/gleb-korostelev/short-url/internal/storage"
+	"github.com/gleb-korostelev/short-url/internal/storage/filecache"
+	"github.com/gleb-korostelev/short-url/internal/storage/inmemory"
+	"github.com/gleb-korostelev/short-url/internal/storage/repository"
+	"github.com/gleb-korostelev/short-url/internal/worker"
+	"github.com/gleb-korostelev/short-url/tools/logger"
 	"go.uber.org/zap"
 )
 
@@ -35,12 +35,12 @@ func main() {
 
 	r := router.RouterInit(svc, log)
 
-	go func() {
-		logger.Infof("Starting pprof server on :6060")
-		if err := http.ListenAndServe(":6060", nil); err != nil {
-			logger.Fatal("pprof server failed", zap.Error(err))
-		}
-	}()
+	// go func() {
+	// 	logger.Infof("Starting pprof server on :6060")
+	// 	if err := http.ListenAndServe(":6060", nil); err != nil {
+	// 		logger.Fatal("pprof server failed", zap.Error(err))
+	// 	}
+	// }()
 
 	logger.Infof("Base URL for shortened links: %s", config.BaseURL)
 

@@ -8,9 +8,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gleb-korostelev/short-url.git/internal/config"
-	"github.com/gleb-korostelev/short-url.git/internal/worker"
-	"github.com/gleb-korostelev/short-url.git/tools/logger"
+	"github.com/gleb-korostelev/short-url/internal/config"
+	"github.com/gleb-korostelev/short-url/internal/worker"
+	"github.com/gleb-korostelev/short-url/tools/logger"
 )
 
 // PostShorter handles the HTTP POST requests for creating shortened URLs.
