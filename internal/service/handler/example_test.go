@@ -113,3 +113,24 @@ func ExampleAPIService_GetUserURLs() {
 		fmt.Printf("Short URL: %s, Original URL: %s\n", url.ShortURL, url.OriginalURL)
 	}
 }
+
+func ExampleAPIService_Ping() {
+	ctrl := gomock.NewController(nil)
+	defer ctrl.Finish()
+
+	mockStore := mock_db.NewMockStorage(ctrl)
+	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
+	svc := handler.NewAPIService(mockStore, workerPool)
+
+	mockStore.EXPECT().Ping(context.Background()).Return(http.StatusOK, nil)
+
+	req := httptest.NewRequest("GET", "/ping", nil)
+	rr := httptest.NewRecorder()
+
+	svc.Ping(rr, req)
+
+	response := rr.Result()
+	defer response.Body.Close()
+
+	fmt.Println("HTTP Status:", response.StatusCode)
+}
