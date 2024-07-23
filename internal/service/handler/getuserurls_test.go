@@ -9,12 +9,12 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gleb-korostelev/short-url/internal/config"
-	"github.com/gleb-korostelev/short-url/internal/models"
-	"github.com/gleb-korostelev/short-url/internal/service/handler"
-	"github.com/gleb-korostelev/short-url/internal/service/utils"
-	"github.com/gleb-korostelev/short-url/internal/worker"
-	mock_db "github.com/gleb-korostelev/short-url/mocks"
+	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/models"
+	"github.com/gleb-korostelev/short-url.git/internal/service/handler"
+	"github.com/gleb-korostelev/short-url.git/internal/service/utils"
+	"github.com/gleb-korostelev/short-url.git/internal/worker"
+	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
 )
 
 func TestGetUserURLs(t *testing.T) {

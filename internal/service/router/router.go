@@ -3,8 +3,8 @@
 package router
 
 import (
-	"github.com/gleb-korostelev/short-url/internal/middleware"
-	"github.com/gleb-korostelev/short-url/internal/service"
+	"github.com/gleb-korostelev/short-url.git/internal/middleware"
+	"github.com/gleb-korostelev/short-url.git/internal/service"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )

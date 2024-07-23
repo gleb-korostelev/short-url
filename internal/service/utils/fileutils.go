@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/gleb-korostelev/short-url/internal/config"
-	"github.com/gleb-korostelev/short-url/internal/models"
-	"github.com/gleb-korostelev/short-url/tools/logger"
+	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/models"
+	"github.com/gleb-korostelev/short-url.git/tools/logger"
 )
 
 // SaveURLs writes a URLData object to a file specified in the configuration.

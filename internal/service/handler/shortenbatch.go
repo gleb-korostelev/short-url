@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gleb-korostelev/short-url/internal/config"
-	"github.com/gleb-korostelev/short-url/internal/models"
+	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/models"
 )
 
 // ShortenBatchHandler processes HTTP POST requests to shorten multiple URLs simultaneously.

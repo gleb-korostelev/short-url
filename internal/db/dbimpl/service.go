@@ -5,9 +5,9 @@ package dbimpl
 import (
 	"context"
 
-	"github.com/gleb-korostelev/short-url/internal/config"
-	"github.com/gleb-korostelev/short-url/internal/db"
-	"github.com/gleb-korostelev/short-url/tools/logger"
+	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/db"
+	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"

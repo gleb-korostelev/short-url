@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gleb-korostelev/short-url/internal/config"
-	"github.com/gleb-korostelev/short-url/internal/worker"
-	"github.com/gleb-korostelev/short-url/tools/logger"
+	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/worker"
+	"github.com/gleb-korostelev/short-url.git/tools/logger"
 )
 
 // DeleteURLsHandler handles the HTTP DELETE request for deleting one or more URLs.

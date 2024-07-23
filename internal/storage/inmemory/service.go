@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/gleb-korostelev/short-url/internal/config"
-	"github.com/gleb-korostelev/short-url/internal/models"
-	"github.com/gleb-korostelev/short-url/internal/service/utils"
-	"github.com/gleb-korostelev/short-url/internal/storage"
-	"github.com/gleb-korostelev/short-url/tools/logger"
+	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/models"
+	"github.com/gleb-korostelev/short-url.git/internal/service/utils"
+	"github.com/gleb-korostelev/short-url.git/internal/storage"
+	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"github.com/google/uuid"
 )
 

@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gleb-korostelev/short-url/internal/config"
-	"github.com/gleb-korostelev/short-url/internal/service/utils"
-	"github.com/gleb-korostelev/short-url/tools/logger"
+	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/service/utils"
+	"github.com/gleb-korostelev/short-url.git/tools/logger"
 )
 
 // GetUserURLs handles the HTTP GET request to retrieve all URLs associated with the authenticated user.

@@ -5,10 +5,10 @@ package dbimpl
 import (
 	"context"
 
-	"github.com/gleb-korostelev/short-url/internal/config"
-	"github.com/gleb-korostelev/short-url/internal/db"
-	"github.com/gleb-korostelev/short-url/internal/models"
-	"github.com/gleb-korostelev/short-url/tools/logger"
+	"github.com/gleb-korostelev/short-url.git/internal/config"
+	"github.com/gleb-korostelev/short-url.git/internal/db"
+	"github.com/gleb-korostelev/short-url.git/internal/models"
+	"github.com/gleb-korostelev/short-url.git/tools/logger"
 )
 
 // InitializeTables creates the necessary database tables if they do not already exist.
