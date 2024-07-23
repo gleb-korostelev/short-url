@@ -69,17 +69,17 @@ func TestGetUserURLs(t *testing.T) {
 			req, _ := http.NewRequest("GET", "/user/urls", nil)
 			rr := httptest.NewRecorder()
 
-			tc.mockSetup()
-			svc.GetUserURLs(rr, req)
-
-			response := rr.Result()
-			defer response.Body.Close()
-
 			utils.SetJWTInCookie(rr, tc.userID)
 			cookies := rr.Result().Cookies()
 			if len(cookies) > 0 {
 				req.AddCookie(cookies[0])
 			}
+
+			response := rr.Result()
+			defer response.Body.Close()
+
+			tc.mockSetup()
+			svc.GetUserURLs(rr, req)
 
 			assert.Equal(t, tc.expectedStatus, rr.Code)
 			if tc.expectedBody != "" {
