@@ -71,13 +71,15 @@ func TestGetUserURLs(t *testing.T) {
 
 			utils.SetJWTInCookie(rr, tc.userID)
 			cookies := rr.Result().Cookies()
+			defer rr.Result().Body.Close()
+			// cookies := response.Cookies()
 			if len(cookies) > 0 {
 				req.AddCookie(cookies[0])
 			}
 
-			response := rr.Result()
-			defer response.Body.Close()
-
+			// response := rr.Result()
+			// defer response.Body.Close()
+			// defer req.Body.Close()
 			tc.mockSetup()
 			svc.GetUserURLs(rr, req)
 
