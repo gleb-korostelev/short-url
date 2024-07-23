@@ -9,21 +9,22 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	"github.com/gleb-korostelev/short-url.git/internal/cache"
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/models"
 	"github.com/gleb-korostelev/short-url.git/internal/service/handler"
 	"github.com/gleb-korostelev/short-url.git/internal/service/utils"
-	"github.com/gleb-korostelev/short-url.git/internal/storage/inmemory"
 	"github.com/gleb-korostelev/short-url.git/internal/worker"
 	mock_db "github.com/gleb-korostelev/short-url.git/mocks"
 	"github.com/golang/mock/gomock"
 )
 
 func ExampleAPIService_GetOriginal() {
-	store := inmemory.NewMemoryStorage(cache.Cache)
+	ctrl := gomock.NewController(nil)
+	defer ctrl.Finish()
+
+	mockStore := mock_db.NewMockStorage(ctrl)
 	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
-	apiService := handler.NewAPIService(store, workerPool)
+	apiService := handler.NewAPIService(mockStore, workerPool)
 	server := httptest.NewServer(http.HandlerFunc(apiService.GetOriginal))
 	defer server.Close()
 
@@ -37,9 +38,12 @@ func ExampleAPIService_GetOriginal() {
 }
 
 func ExampleAPIService_PostShorter() {
-	store := inmemory.NewMemoryStorage(cache.Cache)
+	ctrl := gomock.NewController(nil)
+	defer ctrl.Finish()
+
+	mockStore := mock_db.NewMockStorage(ctrl)
 	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
-	apiService := handler.NewAPIService(store, workerPool)
+	apiService := handler.NewAPIService(mockStore, workerPool)
 	server := httptest.NewServer(http.HandlerFunc(apiService.PostShorter))
 	defer server.Close()
 
@@ -56,12 +60,12 @@ func ExampleAPIService_DeleteURLsHandler() {
 	defer ctrl.Finish()
 
 	mockStore := mock_db.NewMockStorage(ctrl)
-	mockWorkerPool := worker.NewDBWorkerPool(1)
-	defer mockWorkerPool.Shutdown()
+	workerPool := worker.NewDBWorkerPool(1)
+	defer workerPool.Shutdown()
 
 	mockStore.EXPECT().MarkURLsAsDeleted(gomock.Any(), "user-123", []string{"short1", "short2"}).Return(nil)
 
-	svc := handler.NewAPIService(mockStore, mockWorkerPool)
+	svc := handler.NewAPIService(mockStore, workerPool)
 
 	urlsToDelete := []string{"short1", "short2"}
 	body, _ := json.Marshal(urlsToDelete)

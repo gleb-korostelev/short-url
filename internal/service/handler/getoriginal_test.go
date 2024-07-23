@@ -22,10 +22,10 @@ func BenchmarkProcessURLs(b *testing.B) {
 	ctrl := gomock.NewController(b)
 	defer ctrl.Finish()
 	mockdb := mock_db.NewMockDatabaseI(ctrl)
-	store := repository.NewDBStorage(mockdb)
+	mockStore := repository.NewDBStorage(mockdb)
 	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
 
-	svc := handler.NewAPIService(store, workerPool)
+	svc := handler.NewAPIService(mockStore, workerPool)
 
 	testShort := "testID"
 
@@ -49,9 +49,9 @@ func TestGetOriginal(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mock_db.NewMockStorage(ctrl)
+	mockStore := mock_db.NewMockStorage(ctrl)
 	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
-	svc := handler.NewAPIService(mockStorage, workerPool)
+	svc := handler.NewAPIService(mockStore, workerPool)
 
 	r := chi.NewRouter()
 	r.Get("/{id}", svc.GetOriginal)
@@ -97,7 +97,7 @@ func TestGetOriginal(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			mockStorage.EXPECT().
+			mockStore.EXPECT().
 				GetOriginalLink(gomock.Any(), tt.id).
 				Return(tt.mockResponse, tt.mockError).
 				Times(1)
