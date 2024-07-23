@@ -10,6 +10,7 @@ import (
 	"os"
 )
 
+// List of constants
 const (
 	// Letters defines the character set for generating random strings (used in URLs).
 	Letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -38,6 +39,7 @@ type contextKey string
 // UserContextKey is a key used for storing user ID in the request context.
 const UserContextKey = contextKey("user")
 
+// List of vars
 var (
 	// ErrExists indicates an error when a URL already exists in the storage.
 	ErrExists = errors.New("URL already exists")

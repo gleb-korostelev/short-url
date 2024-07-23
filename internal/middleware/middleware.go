@@ -74,18 +74,25 @@ type responseWriter struct {
 	size   int
 }
 
+// WriteHeader sends an HTTP response header with the status code.
+// If WriteHeader is not called explicitly, the first call to Write
+// will trigger an implicit WriteHeader(http.StatusOK).
+// Multiple calls to WriteHeader will result in an invalid multiple header write error.
 func (w *responseWriter) WriteHeader(statusCode int) {
-	w.status = statusCode
-	w.ResponseWriter.WriteHeader(statusCode)
+	w.status = statusCode                    // Store the status code to handle multiple calls or checks.
+	w.ResponseWriter.WriteHeader(statusCode) // Delegate to the underlying ResponseWriter.
 }
 
+// Write writes the data to the connection as part of an HTTP reply.
+// If WriteHeader has not been called, it calls WriteHeader(http.StatusOK)
+// before writing the data. It returns the number of bytes written and any write error encountered.
 func (w *responseWriter) Write(b []byte) (int, error) {
-	if w.status == 0 {
-		w.status = http.StatusOK
+	if w.status == 0 { // Check if the status code has not been set.
+		w.WriteHeader(http.StatusOK) // Set the default status code to OK if not set.
 	}
-	size, err := w.ResponseWriter.Write(b)
-	w.size += size
-	return size, err
+	size, err := w.ResponseWriter.Write(b) // Write the data using the embedded ResponseWriter.
+	w.size += size                         // Update the size of the data written.
+	return size, err                       // Return the size of the data written and any error encountered.
 }
 
 // gzipResponseWriter is an enhanced http.ResponseWriter that supports Gzip compression.
@@ -95,28 +102,37 @@ type gzipResponseWriter struct {
 	hasWrittenHeader bool
 }
 
+// WriteHeader sets the status code for the HTTP response header.
+// If WriteHeader is called after writing has started, it returns without modifying the header.
+// This prevents headers from being rewritten which can lead to protocol errors.
 func (w *gzipResponseWriter) WriteHeader(statusCode int) {
 	if w.hasWrittenHeader {
-		return
+		return // Prevent modification after headers are written.
 	}
 	w.hasWrittenHeader = true
-	w.ResponseWriter.WriteHeader(statusCode)
+	w.ResponseWriter.WriteHeader(statusCode) // Delegate to the underlying ResponseWriter to set the status code.
 }
 
+// Write writes the provided byte slice into the response body.
+// If WriteHeader has not yet been called, Write will first set the Content-Encoding to gzip
+// for specific content types ('application/json', 'text/html') and initialize gzip compression.
+// If the content type is not compatible with gzip, it writes directly using the underlying ResponseWriter.
+// It ensures headers are written before any response body if not already done.
 func (w *gzipResponseWriter) Write(b []byte) (int, error) {
 	if !w.hasWrittenHeader {
+		// Automatically handle content encoding and compression based on content type
 		contentType := w.Header().Get("Content-Type")
 		if strings.HasPrefix(contentType, "application/json") || strings.HasPrefix(contentType, "text/html") {
 			w.Header().Set("Content-Encoding", "gzip")
 			gz := gzip.NewWriter(w.ResponseWriter)
-			defer gz.Close()
-			w.Writer = gz
+			defer gz.Close() // Ensure the gzip writer is closed after the write operation
+			w.Writer = gz    // Use gzip writer for response body
 		} else {
-			w.Writer = w.ResponseWriter
+			w.Writer = w.ResponseWriter // Use the normal response writer for non-compatible types
 		}
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusOK) // Set default status code if not yet set
 	}
-	return w.Writer.Write(b)
+	return w.Writer.Write(b) // Write the data to the selected writer
 }
 
 // EnsureUserCookie checks for a valid user ID from cookies.
