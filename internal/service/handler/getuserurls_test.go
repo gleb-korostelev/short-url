@@ -70,21 +70,12 @@ func TestGetUserURLs(t *testing.T) {
 			rr := httptest.NewRecorder()
 
 			utils.SetJWTInCookie(rr, tc.userID)
-			// cookies := rr.Result().Cookies()
-			// defer rr.Result().Body.Close()
-			// // cookies := response.Cookies()
-			// if len(cookies) > 0 {
-			// 	req.AddCookie(cookies[0])
-			// }
+			tc.mockSetup()
 
 			response := rr.Result()
 			defer response.Body.Close()
-			// defer req.Body.Close()
-			tc.mockSetup()
+			cookies := response.Cookies()
 
-			cookies := rr.Result().Cookies()
-			defer rr.Result().Body.Close()
-			// cookies := response.Cookies()
 			if len(cookies) > 0 {
 				req.AddCookie(cookies[0])
 			}
