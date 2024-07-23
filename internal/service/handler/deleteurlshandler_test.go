@@ -25,12 +25,10 @@ func TestDeleteURLsHandler(t *testing.T) {
 	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
 	svc := handler.NewAPIService(mockStore, workerPool)
 
-	// Тестовые данные
 	testURLs := []string{"http://example.com", "http://test.com"}
 	jsonBody, _ := json.Marshal(testURLs)
 	userID := "test-user-id"
 
-	// Настройка контекста
 	ctx := context.WithValue(context.Background(), config.UserContextKey, userID)
 
 	tests := []struct {
@@ -52,7 +50,7 @@ func TestDeleteURLsHandler(t *testing.T) {
 		{
 			name:           "Unauthorized Access",
 			body:           bytes.NewBuffer(jsonBody),
-			context:        context.Background(), // Нет userID в контексте
+			context:        context.Background(),
 			expectedStatus: http.StatusUnauthorized,
 			setupMocks:     func() {},
 		},
@@ -67,7 +65,7 @@ func TestDeleteURLsHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, _ := http.NewRequest("POST", "/delete", tt.body)
+			req, _ := http.NewRequest("DELETE", "/delete", tt.body)
 			req = req.WithContext(tt.context)
 			rr := httptest.NewRecorder()
 
