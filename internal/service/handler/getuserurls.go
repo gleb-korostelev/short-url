@@ -1,5 +1,3 @@
-// Package handler contains HTTP handlers that provide web API functionality.
-// These handlers manage operations such as URL creation, deletion, and redirection.
 package handler
 
 import (

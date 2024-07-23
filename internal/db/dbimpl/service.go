@@ -1,5 +1,3 @@
-// Package dbimpl implements the database interface defined in the db package for PostgreSQL.
-// It utilizes the pgx library to establish and manage the database connection pool.
 package dbimpl
 
 import (

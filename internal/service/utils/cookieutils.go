@@ -1,5 +1,3 @@
-// Package utils provides utility functions for file-based operations related to URL management,
-// including saving, loading, and marking URLs as deleted within JSON files.
 package utils
 
 import (
