@@ -39,7 +39,7 @@ func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID 
 	uuid, err := uuid.Parse(userID)
 	if err != nil {
 		logger.Errorf("Error parsing userID: %v", err)
-		return "", http.StatusBadRequest, err
+		return "", http.StatusInternalServerError, err
 	}
 
 	err = dbimpl.CreateShortURL(s.data, uuid.String(), shortURL, originalURL)
