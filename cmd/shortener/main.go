@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/gleb-korostelev/short-url.git/internal/cache"
 	"github.com/gleb-korostelev/short-url.git/internal/config"
@@ -18,6 +19,7 @@ import (
 )
 
 func main() {
+
 	config.ConfigInit()
 	log, _ := zap.NewProduction()
 
@@ -32,6 +34,13 @@ func main() {
 	svc := handler.NewAPIService(store, workerPool)
 
 	r := router.RouterInit(svc, log)
+
+	// go func() {
+	// 	logger.Infof("Starting pprof server on :6060")
+	// 	if err := http.ListenAndServe(":6060", nil); err != nil {
+	// 		logger.Fatal("pprof server failed", zap.Error(err))
+	// 	}
+	// }()
 
 	logger.Infof("Base URL for shortened links: %s", config.BaseURL)
 

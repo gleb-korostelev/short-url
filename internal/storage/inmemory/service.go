@@ -1,3 +1,6 @@
+// Package inmemory implements the storage.Storage interface using an in-memory data store.
+// It provides fast access to URL data stored directly in memory, suitable for scenarios
+// where persistence across service restarts is not required.
 package inmemory
 
 import (
@@ -13,17 +16,23 @@ import (
 	"github.com/google/uuid"
 )
 
+// service provides an in-memory storage mechanism for URL data.
+// It uses a map to store URL data, keyed by short URL strings, and a mutex to manage concurrent access.
 type service struct {
-	cache map[string]models.URLData
-	mu    sync.RWMutex
+	cache map[string]models.URLData // cache stores the URL data in-memory.
+	mu    sync.RWMutex              // mu protects the cache from concurrent read/write access.
 }
 
+// NewMemoryStorage initializes a new in-memory storage service with a given initial cache.
 func NewMemoryStorage(cache map[string]models.URLData) storage.Storage {
 	return &service{
 		cache: cache,
 	}
 }
 
+// SaveUniqueURL saves a new URL into the in-memory storage, ensuring the short URL is unique.
+// It generates a short URL, checks for uniqueness within the existing entries, and saves the URL data.
+// Returns the complete URL, HTTP status code, and error if any.
 func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID string) (string, int, error) {
 	uuid, err := uuid.Parse(userID)
 	if err != nil {
@@ -49,6 +58,7 @@ func (s *service) SaveUniqueURL(ctx context.Context, originalURL string, userID 
 	return config.BaseURL + "/" + shortURL, http.StatusCreated, nil
 }
 
+// SaveURL performs a similar operation to SaveUniqueURL but does not return an HTTP status.
 func (s *service) SaveURL(ctx context.Context, originalURL string, userID string) (string, error) {
 	uuid, err := uuid.Parse(userID)
 	if err != nil {
@@ -74,6 +84,7 @@ func (s *service) SaveURL(ctx context.Context, originalURL string, userID string
 	return config.BaseURL + "/" + shortURL, nil
 }
 
+// GetOriginalLink retrieves the original URL from a given short URL, checking if it's marked as deleted.
 func (s *service) GetOriginalLink(ctx context.Context, shortURL string) (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -88,15 +99,18 @@ func (s *service) GetOriginalLink(ctx context.Context, shortURL string) (string,
 
 }
 
+// Ping checks the operation status of the in-memory storage, typically returning an error as it does not involve connectivity.
 func (s *service) Ping(ctx context.Context) (int, error) {
 	logger.Errorf("Using inmemory save %v", config.ErrWrongMode)
 	return http.StatusInternalServerError, config.ErrWrongMode
 }
 
+// Close performs cleanup if necessary; in this implementation, it is a no-operation.
 func (s *service) Close() error {
 	return nil
 }
 
+// GetAllURLs retrieves all URLs associated with a specific user ID, filtering out deleted entries.
 func (s *service) GetAllURLS(ctx context.Context, userID, baseURL string) ([]models.UserURLs, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -113,6 +127,7 @@ func (s *service) GetAllURLS(ctx context.Context, userID, baseURL string) ([]mod
 	return urls, nil
 }
 
+// MarkURLsAsDeleted marks specified URLs as deleted for a given user ID.
 func (s *service) MarkURLsAsDeleted(ctx context.Context, userID string, shortURLs []string) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

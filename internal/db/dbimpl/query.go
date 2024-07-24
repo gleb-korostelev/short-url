@@ -1,3 +1,5 @@
+// Package dbimpl contains the implementation of the database interface defined in the db package.
+// It includes functions for initializing the database tables, creating, retrieving, and updating URL data.
 package dbimpl
 
 import (
@@ -9,6 +11,8 @@ import (
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
 )
 
+// InitializeTables creates the necessary database tables if they do not already exist.
+// This function is typically called at application startup.
 func InitializeTables(db db.DB) error {
 	createTableSQL := `
     CREATE TABLE IF NOT EXISTS shortened_urls (
@@ -20,10 +24,11 @@ func InitializeTables(db db.DB) error {
 		is_deleted BOOLEAN DEFAULT FALSE
     );`
 	_, err := db.Exec(context.Background(), createTableSQL)
-
 	return err
 }
 
+// CreateShortURL inserts a new shortened URL into the database.
+// It handles conflicts by updating existing entries where the original URL is already present but marked as deleted.
 func CreateShortURL(db db.DB, uuid, shortURL, originalURL string) error {
 	sql := `
     INSERT INTO shortened_urls (user_id, short_url, original_url, is_deleted)
@@ -44,6 +49,8 @@ func CreateShortURL(db db.DB, uuid, shortURL, originalURL string) error {
 	return nil
 }
 
+// GetOriginalURL retrieves the original URL from a shortened URL.
+// It returns an error if the URL is marked as deleted or if the shortened URL does not exist.
 func GetOriginalURL(db db.DB, shortURL string) (string, error) {
 	var originalURL string
 	var isDeleted bool
@@ -58,6 +65,8 @@ func GetOriginalURL(db db.DB, shortURL string) (string, error) {
 	return originalURL, nil
 }
 
+// GetOriginalURLsByUserID retrieves all active (not deleted) original URLs for a given user ID.
+// It prepends the base URL to each short URL before returning the list.
 func GetOriginalURLsByUserID(db db.DB, userID, baseURL string) ([]models.UserURLs, error) {
 	sql := `
 	SELECT short_url, original_url FROM shortened_urls
@@ -86,6 +95,8 @@ func GetOriginalURLsByUserID(db db.DB, userID, baseURL string) ([]models.UserURL
 	return urls, nil
 }
 
+// GetShortURLByOriginalURL retrieves the shortened URL for a given original URL.
+// It returns an error if the original URL does not exist in the database.
 func GetShortURLByOriginalURL(db db.DB, originalURL string) (string, error) {
 	var shortURL string
 	sql := `SELECT short_url FROM shortened_urls WHERE original_url = $1`
@@ -96,6 +107,8 @@ func GetShortURLByOriginalURL(db db.DB, originalURL string) (string, error) {
 	return shortURL, nil
 }
 
+// MarkDeleted marks a list of shortened URLs as deleted for a specific user.
+// This function runs asynchronously and logs the result of the operation.
 func MarkDeleted(db db.DB, userID string, shortURLs []string) {
 	go func() {
 		sql := `

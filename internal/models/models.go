@@ -1,3 +1,5 @@
+// Package models contains data structures used throughout the application.
+// These structures are used for handling URL data and user authentication.
 package models
 
 import (
@@ -5,37 +7,44 @@ import (
 	"github.com/google/uuid"
 )
 
+// URLPayload defines the structure for receiving URLs in requests.
 type URLPayload struct {
 	URL string `json:"url"`
 }
 
+// ShortURLResponse defines the structure for sending shortened URLs in responses.
 type ShortURLResponse struct {
 	Result string `json:"result"`
 }
 
+// URLData describes the structure of URL data in the database.
 type URLData struct {
-	UUID        uuid.UUID `db:"user_id"`
-	ShortURL    string    `db:"short_url"`
-	OriginalURL string    `db:"original_url"`
-	DeletedFlag bool      `db:"is_deleted"`
+	UUID        uuid.UUID `db:"user_id"`      // UUID of the user
+	ShortURL    string    `db:"short_url"`    // Shortened URL
+	OriginalURL string    `db:"original_url"` // Original URL
+	DeletedFlag bool      `db:"is_deleted"`   // Flag indicating if the URL is deleted
 }
 
+// ShortenBatchRequestItem describes a request item for batch URL shortening.
 type ShortenBatchRequestItem struct {
-	CorrelationID string `json:"correlation_id"`
-	OriginalURL   string `json:"original_url"`
+	CorrelationID string `json:"correlation_id"` // Correlation identifier for tracking requests
+	OriginalURL   string `json:"original_url"`   // Original URL to be shortened
 }
 
+// ShortenBatchResponseItem describes a response item for a batch URL shortening request.
 type ShortenBatchResponseItem struct {
-	CorrelationID string `json:"correlation_id"`
-	ShortURL      string `json:"short_url"`
+	CorrelationID string `json:"correlation_id"` // Correlation identifier from the request
+	ShortURL      string `json:"short_url"`      // Shortened URL
 }
 
+// UserURLs represents both shortened and original URLs associated with a user.
 type UserURLs struct {
-	ShortURL    string `json:"short_url"`
-	OriginalURL string `json:"original_url"`
+	ShortURL    string `json:"short_url"`    // Shortened URL
+	OriginalURL string `json:"original_url"` // Original URL
 }
 
+// Claims defines custom JWT claims used for authentication.
 type Claims struct {
-	UserID string `json:"user_id"`
+	UserID string `json:"user_id"` // User identifier
 	jwt.RegisteredClaims
 }
