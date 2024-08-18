@@ -71,10 +71,7 @@ func main() {
 			<-gCtx.Done()
 			return server.Shutdown(context.Background())
 		})
-		// err := http.ListenAndServeTLS(config.ServerAddr, config.CertFilePath, config.KeyFilePath, nil)
-		// if err != nil {
-		// 	logger.Fatal("Failed to start HTTPS server: %v\n", zap.Error(err))
-		// }
+
 	} else {
 		logger.Infof("Starting HTTP server on %s\n", config.ServerAddr)
 		g.Go(func() error { return server.ListenAndServe() })
@@ -82,12 +79,9 @@ func main() {
 			<-gCtx.Done()
 			return server.Shutdown(context.Background())
 		})
-		// if err := http.ListenAndServe(config.ServerAddr, r); err != nil {
-		// 	logger.Fatal("Error starting server: %v", zap.Error(err))
-		// }
 	}
 	if err := g.Wait(); err != nil {
-		logger.Fatal("Exit with: %v\n", err)
+		logger.Infof("Exit with: %v\n", err)
 	}
 }
 
