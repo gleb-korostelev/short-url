@@ -56,7 +56,7 @@ func main() {
 
 	if config.EnableHTTPS {
 		logger.Infof("Starting HTTPS server on %s\n", config.ServerAddr)
-		err := http.ListenAndServeTLS(config.ServerAddr, config.CertFilePath, config.KeyFilePath, nil)
+		err := http.ListenAndServeTLS(config.ServerAddr, config.CertFilePath, config.KeyFilePath, r)
 		if err != nil {
 			logger.Fatal("Failed to start HTTPS server: %v\n", zap.Error(err))
 		}
