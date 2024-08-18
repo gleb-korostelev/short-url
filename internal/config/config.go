@@ -32,6 +32,12 @@ const (
 
 	// MaxConcurrentUpdates defines the maximum number of concurrent update operations.
 	MaxConcurrentUpdates = 10
+
+	//Certificate file path
+	CertFilePath = "./internal/certs/server.crt"
+
+	// Certificate key file path
+	KeyFilePath = "./internal/certs/server.key"
 )
 
 type contextKey string
@@ -64,6 +70,7 @@ var (
 	BaseFilePath string                   // BaseFilePath is the file path where URLs are stored when file mode is used.
 	DBDSN        string                   // DBDSN is the Data Source Name for the database connection.
 	JwtKeySecret = "very-very-secret-key" // JwtKeySecret is the secret key for signing JWTs.
+	EnableHTTPS  bool                     //EnableHTTPS flag
 )
 
 // ConfigInit initializes the application's configuration by parsing command-line flags
@@ -74,6 +81,7 @@ func ConfigInit() {
 	flag.StringVar(&BaseURL, "b", DefaultBaseURL, "base address for the resulting shortened URLs")
 	flag.StringVar(&BaseFilePath, "f", DefaultFilePath, "base file path to save URLs")
 	flag.StringVar(&DBDSN, "d", "", "database connection string")
+	flag.BoolVar(&EnableHTTPS, "s", false, "Enable HTTPS")
 
 	flag.Parse()
 
@@ -82,6 +90,9 @@ func ConfigInit() {
 	BaseURL = GetEnv("BASE_URL", BaseURL)
 	BaseFilePath = GetEnv("FILE_STORAGE_PATH", BaseFilePath)
 	DBDSN = GetEnv("DATABASE_DSN", DBDSN)
+	if os.Getenv("ENABLE_HTTPS") == "true" {
+		EnableHTTPS = true
+	}
 }
 
 // GetEnv retrieves the value of an environment variable or returns a fallback value if not set.

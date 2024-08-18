@@ -54,11 +54,18 @@ func main() {
 
 	logger.Infof("Base URL for shortened links: %s", config.BaseURL)
 
-	logger.Infof("Server is listening on: %s", config.ServerAddr)
-	if err := http.ListenAndServe(config.ServerAddr, r); err != nil {
-		logger.Fatal("Error starting server: %v", zap.Error(err))
+	if config.EnableHTTPS {
+		logger.Infof("Starting HTTPS server on %s\n", config.ServerAddr)
+		err := http.ListenAndServeTLS(config.ServerAddr, config.CertFilePath, config.KeyFilePath, nil)
+		if err != nil {
+			logger.Fatal("Failed to start HTTPS server: %v\n", zap.Error(err))
+		}
+	} else {
+		logger.Infof("Starting HTTP server on %s\n", config.ServerAddr)
+		if err := http.ListenAndServe(config.ServerAddr, r); err != nil {
+			logger.Fatal("Error starting server: %v", zap.Error(err))
+		}
 	}
-
 }
 
 func storageInit() (storage.Storage, error) {
