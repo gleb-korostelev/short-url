@@ -9,6 +9,7 @@ import (
 	"github.com/gleb-korostelev/short-url.git/internal/models"
 )
 
+// This function loads settings from JSON file
 func LoadConfig(path string) (*models.Config, error) {
 	file, err := os.Open(path)
 	if err != nil {

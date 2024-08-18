@@ -72,7 +72,7 @@ var (
 	BaseFilePath string                   // BaseFilePath is the file path where URLs are stored when file mode is used.
 	DBDSN        string                   // DBDSN is the Data Source Name for the database connection.
 	JwtKeySecret = "very-very-secret-key" // JwtKeySecret is the secret key for signing JWTs.
-	EnableHTTPS  bool                     //EnableHTTPS flag
+	EnableHTTPS  bool                     // EnableHTTPS flag
 	ConfigPath   string                   // Path to the config JSON file
 )
 
