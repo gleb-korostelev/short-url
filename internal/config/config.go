@@ -80,6 +80,11 @@ var (
 // and reading from environment variables. It provides default values and overrides them
 // with any user-specified options.
 func ConfigInit() {
+	flag.StringVar(&ServerAddr, "a", DefaultServerAddress, "address to run HTTP server on")
+	flag.StringVar(&BaseURL, "b", DefaultBaseURL, "base address for the resulting shortened URLs")
+	flag.StringVar(&BaseFilePath, "f", DefaultFilePath, "base file path to save URLs")
+	flag.StringVar(&DBDSN, "d", "", "database connection string")
+	flag.BoolVar(&EnableHTTPS, "s", false, "Enable HTTPS")
 	flag.StringVar(&ConfigPath, "config", "", "Path to config file")
 	flag.StringVar(&ConfigPath, "c", "", "Path to config file")
 
@@ -91,12 +96,6 @@ func ConfigInit() {
 	}
 
 	loadConf(ConfigPath)
-
-	flag.StringVar(&ServerAddr, "a", DefaultServerAddress, "address to run HTTP server on")
-	flag.StringVar(&BaseURL, "b", DefaultBaseURL, "base address for the resulting shortened URLs")
-	flag.StringVar(&BaseFilePath, "f", DefaultFilePath, "base file path to save URLs")
-	flag.StringVar(&DBDSN, "d", "", "database connection string")
-	flag.BoolVar(&EnableHTTPS, "s", false, "Enable HTTPS")
 
 	// Override default values with environment variables if they exist.
 	ServerAddr = GetEnv("SERVER_ADDRESS", ServerAddr)
@@ -115,11 +114,21 @@ func loadConf(path string) {
 			logger.Errorf("Failed to load config file: %v\n", err)
 			os.Exit(1)
 		}
-		ServerAddr = cfg.ServerAddr
-		BaseURL = cfg.BaseURL
-		BaseFilePath = cfg.BaseFilePath
-		DBDSN = cfg.DBDSN
-		EnableHTTPS = cfg.EnableHTTPS
+		if ServerAddr == DefaultServerAddress {
+			ServerAddr = cfg.ServerAddr
+		}
+		if BaseURL == DefaultBaseURL {
+			BaseURL = cfg.BaseURL
+		}
+		if BaseFilePath == DefaultFilePath {
+			BaseFilePath = cfg.BaseFilePath
+		}
+		if DBDSN == "" {
+			DBDSN = cfg.DBDSN
+		}
+		if !EnableHTTPS {
+			EnableHTTPS = cfg.EnableHTTPS
+		}
 	}
 }
 
