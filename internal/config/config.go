@@ -98,6 +98,8 @@ func ConfigInit() {
 	flag.StringVar(&DBDSN, "d", "", "database connection string")
 	flag.BoolVar(&EnableHTTPS, "s", false, "Enable HTTPS")
 
+	flag.Parse()
+
 	// Override default values with environment variables if they exist.
 	ServerAddr = GetEnv("SERVER_ADDRESS", ServerAddr)
 	BaseURL = GetEnv("BASE_URL", BaseURL)
