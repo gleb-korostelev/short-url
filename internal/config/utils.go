@@ -1,20 +1,36 @@
 package config
 
 import (
+	"bufio"
 	"encoding/json"
-	"io/ioutil"
+	"os"
+	"strings"
 
 	"github.com/gleb-korostelev/short-url.git/internal/models"
 )
 
 func LoadConfig(path string) (*models.Config, error) {
-	data, err := ioutil.ReadFile(path)
+	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-	var cfg models.Config
-	if err := json.Unmarshal(data, &cfg); err != nil {
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var data strings.Builder
+
+	for scanner.Scan() {
+		data.WriteString(scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
+
+	var cfg models.Config
+	if err := json.Unmarshal([]byte(data.String()), &cfg); err != nil {
+		return nil, err
+	}
+
 	return &cfg, nil
 }

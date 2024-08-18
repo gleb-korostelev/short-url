@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/gleb-korostelev/short-url.git/internal/cache"
 	"github.com/gleb-korostelev/short-url.git/internal/config"
@@ -17,6 +21,7 @@ import (
 	"github.com/gleb-korostelev/short-url.git/internal/worker"
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -52,19 +57,37 @@ func main() {
 	// 	}
 	// }()
 
-	logger.Infof("Base URL for shortened links: %s", config.BaseURL)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	defer cancel()
+
+	server := http.Server{Addr: config.ServerAddr, Handler: r}
+
+	g, gCtx := errgroup.WithContext(ctx)
 
 	if config.EnableHTTPS {
 		logger.Infof("Starting HTTPS server on %s\n", config.ServerAddr)
-		err := http.ListenAndServeTLS(config.ServerAddr, config.CertFilePath, config.KeyFilePath, nil)
-		if err != nil {
-			logger.Fatal("Failed to start HTTPS server: %v\n", zap.Error(err))
-		}
+		g.Go(func() error { return server.ListenAndServeTLS(config.CertFilePath, config.KeyFilePath) })
+		g.Go(func() error {
+			<-gCtx.Done()
+			return server.Shutdown(context.Background())
+		})
+		// err := http.ListenAndServeTLS(config.ServerAddr, config.CertFilePath, config.KeyFilePath, nil)
+		// if err != nil {
+		// 	logger.Fatal("Failed to start HTTPS server: %v\n", zap.Error(err))
+		// }
 	} else {
 		logger.Infof("Starting HTTP server on %s\n", config.ServerAddr)
-		if err := http.ListenAndServe(config.ServerAddr, r); err != nil {
-			logger.Fatal("Error starting server: %v", zap.Error(err))
-		}
+		g.Go(func() error { return server.ListenAndServe() })
+		g.Go(func() error {
+			<-gCtx.Done()
+			return server.Shutdown(context.Background())
+		})
+		// if err := http.ListenAndServe(config.ServerAddr, r); err != nil {
+		// 	logger.Fatal("Error starting server: %v", zap.Error(err))
+		// }
+	}
+	if err := g.Wait(); err != nil {
+		logger.Fatal("Exit with: %v\n", err)
 	}
 }
 
