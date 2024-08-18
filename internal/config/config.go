@@ -8,6 +8,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	"github.com/gleb-korostelev/short-url.git/tools/logger"
 )
 
 // List of constants
@@ -71,19 +73,30 @@ var (
 	DBDSN        string                   // DBDSN is the Data Source Name for the database connection.
 	JwtKeySecret = "very-very-secret-key" // JwtKeySecret is the secret key for signing JWTs.
 	EnableHTTPS  bool                     //EnableHTTPS flag
+	ConfigPath   string                   // Path to the config JSON file
 )
 
 // ConfigInit initializes the application's configuration by parsing command-line flags
 // and reading from environment variables. It provides default values and overrides them
 // with any user-specified options.
 func ConfigInit() {
+	flag.StringVar(&ConfigPath, "config", "", "Path to config file")
+	flag.StringVar(&ConfigPath, "c", "", "Path to config file")
+
+	flag.Parse()
+
+	// Override config file path with environment variable if set
+	if envConfigPath := os.Getenv("CONFIG"); envConfigPath != "" {
+		ConfigPath = envConfigPath
+	}
+
+	loadConf(ConfigPath)
+
 	flag.StringVar(&ServerAddr, "a", DefaultServerAddress, "address to run HTTP server on")
 	flag.StringVar(&BaseURL, "b", DefaultBaseURL, "base address for the resulting shortened URLs")
 	flag.StringVar(&BaseFilePath, "f", DefaultFilePath, "base file path to save URLs")
 	flag.StringVar(&DBDSN, "d", "", "database connection string")
 	flag.BoolVar(&EnableHTTPS, "s", false, "Enable HTTPS")
-
-	flag.Parse()
 
 	// Override default values with environment variables if they exist.
 	ServerAddr = GetEnv("SERVER_ADDRESS", ServerAddr)
@@ -92,6 +105,21 @@ func ConfigInit() {
 	DBDSN = GetEnv("DATABASE_DSN", DBDSN)
 	if os.Getenv("ENABLE_HTTPS") == "true" {
 		EnableHTTPS = true
+	}
+}
+
+func loadConf(path string) {
+	if path != "" {
+		cfg, err := LoadConfig(ConfigPath)
+		if err != nil {
+			logger.Errorf("Failed to load config file: %v\n", err)
+			os.Exit(1)
+		}
+		ServerAddr = cfg.ServerAddr
+		BaseURL = cfg.BaseURL
+		BaseFilePath = cfg.BaseFilePath
+		DBDSN = cfg.DBDSN
+		EnableHTTPS = cfg.EnableHTTPS
 	}
 }
 
