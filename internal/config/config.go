@@ -107,6 +107,7 @@ func ConfigInit() {
 	}
 }
 
+// This function loads settings from config if it's not loaded from flags
 func loadConf(path string) {
 	if path != "" {
 		cfg, err := LoadConfig(ConfigPath)
