@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/gleb-korostelev/short-url.git/internal/cache"
 	"github.com/gleb-korostelev/short-url.git/internal/config"
@@ -17,6 +21,7 @@ import (
 	"github.com/gleb-korostelev/short-url.git/internal/worker"
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -52,13 +57,32 @@ func main() {
 	// 	}
 	// }()
 
-	logger.Infof("Base URL for shortened links: %s", config.BaseURL)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	defer cancel()
 
-	logger.Infof("Server is listening on: %s", config.ServerAddr)
-	if err := http.ListenAndServe(config.ServerAddr, r); err != nil {
-		logger.Fatal("Error starting server: %v", zap.Error(err))
+	server := http.Server{Addr: config.ServerAddr, Handler: r}
+
+	g, gCtx := errgroup.WithContext(ctx)
+
+	if config.EnableHTTPS {
+		logger.Infof("Starting HTTPS server on %s\n", config.ServerAddr)
+		g.Go(func() error { return server.ListenAndServeTLS(config.CertFilePath, config.KeyFilePath) })
+		g.Go(func() error {
+			<-gCtx.Done()
+			return server.Shutdown(context.Background())
+		})
+
+	} else {
+		logger.Infof("Starting HTTP server on %s\n", config.ServerAddr)
+		g.Go(func() error { return server.ListenAndServe() })
+		g.Go(func() error {
+			<-gCtx.Done()
+			return server.Shutdown(context.Background())
+		})
 	}
-
+	if err := g.Wait(); err != nil {
+		logger.Infof("Exit with: %v\n", err)
+	}
 }
 
 func storageInit() (storage.Storage, error) {

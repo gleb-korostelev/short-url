@@ -48,3 +48,12 @@ type Claims struct {
 	UserID string `json:"user_id"` // User identifier
 	jwt.RegisteredClaims
 }
+
+// Config defines server settings thats taken from JSON file
+type Config struct {
+	ServerAddr   string `json:"server_address"`
+	BaseURL      string `json:"base_url"`
+	BaseFilePath string `json:"file_storage_path"`
+	DBDSN        string `json:"database_dsn"`
+	EnableHTTPS  bool   `json:"enable_https"`
+}

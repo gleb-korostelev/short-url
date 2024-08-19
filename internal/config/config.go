@@ -8,6 +8,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	"github.com/gleb-korostelev/short-url.git/tools/logger"
 )
 
 // List of constants
@@ -32,6 +34,12 @@ const (
 
 	// MaxConcurrentUpdates defines the maximum number of concurrent update operations.
 	MaxConcurrentUpdates = 10
+
+	//Certificate file path
+	CertFilePath = "./internal/certs/server.crt"
+
+	// Certificate key file path
+	KeyFilePath = "./internal/certs/server.key"
 )
 
 type contextKey string
@@ -64,6 +72,8 @@ var (
 	BaseFilePath string                   // BaseFilePath is the file path where URLs are stored when file mode is used.
 	DBDSN        string                   // DBDSN is the Data Source Name for the database connection.
 	JwtKeySecret = "very-very-secret-key" // JwtKeySecret is the secret key for signing JWTs.
+	EnableHTTPS  bool                     // EnableHTTPS flag
+	ConfigPath   string                   // Path to the config JSON file
 )
 
 // ConfigInit initializes the application's configuration by parsing command-line flags
@@ -74,14 +84,53 @@ func ConfigInit() {
 	flag.StringVar(&BaseURL, "b", DefaultBaseURL, "base address for the resulting shortened URLs")
 	flag.StringVar(&BaseFilePath, "f", DefaultFilePath, "base file path to save URLs")
 	flag.StringVar(&DBDSN, "d", "", "database connection string")
+	flag.BoolVar(&EnableHTTPS, "s", false, "Enable HTTPS")
+	flag.StringVar(&ConfigPath, "config", "", "Path to config file")
+	flag.StringVar(&ConfigPath, "c", "", "Path to config file")
 
 	flag.Parse()
+
+	// Override config file path with environment variable if set
+	if envConfigPath := os.Getenv("CONFIG"); envConfigPath != "" {
+		ConfigPath = envConfigPath
+	}
+
+	loadConf(ConfigPath)
 
 	// Override default values with environment variables if they exist.
 	ServerAddr = GetEnv("SERVER_ADDRESS", ServerAddr)
 	BaseURL = GetEnv("BASE_URL", BaseURL)
 	BaseFilePath = GetEnv("FILE_STORAGE_PATH", BaseFilePath)
 	DBDSN = GetEnv("DATABASE_DSN", DBDSN)
+	if os.Getenv("ENABLE_HTTPS") == "true" {
+		EnableHTTPS = true
+	}
+}
+
+// This function loads settings from config if it's not loaded from flags
+func loadConf(path string) {
+	if path != "" {
+		cfg, err := LoadConfig(ConfigPath)
+		if err != nil {
+			logger.Errorf("Failed to load config file: %v\n", err)
+			os.Exit(1)
+		}
+		if ServerAddr == DefaultServerAddress {
+			ServerAddr = cfg.ServerAddr
+		}
+		if BaseURL == DefaultBaseURL {
+			BaseURL = cfg.BaseURL
+		}
+		if BaseFilePath == DefaultFilePath {
+			BaseFilePath = cfg.BaseFilePath
+		}
+		if DBDSN == "" {
+			DBDSN = cfg.DBDSN
+		}
+		if !EnableHTTPS {
+			EnableHTTPS = cfg.EnableHTTPS
+		}
+	}
 }
 
 // GetEnv retrieves the value of an environment variable or returns a fallback value if not set.
