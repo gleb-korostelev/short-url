@@ -127,3 +127,20 @@ func MarkDeleted(db db.DB, userID string, shortURLs []string) {
 		}
 	}()
 }
+
+// GetStats provides statistics about the service, such as the number of shortened URLs and registered users.
+func GetStats(db db.DB, ctx context.Context) (int, int, error) {
+	var urlsCount, usersCount int
+
+	err := db.QueryRow(ctx, "SELECT COUNT(*) FROM urls WHERE is_deleted = FALSE").Scan(&urlsCount)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	err = db.QueryRow(ctx, "SELECT COUNT(*) FROM users").Scan(&usersCount)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return urlsCount, usersCount, nil
+}
