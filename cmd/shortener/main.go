@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -19,9 +20,12 @@ import (
 	"github.com/gleb-korostelev/short-url.git/internal/storage/inmemory"
 	"github.com/gleb-korostelev/short-url.git/internal/storage/repository"
 	"github.com/gleb-korostelev/short-url.git/internal/worker"
+	grpcservice "github.com/gleb-korostelev/short-url.git/pkg/grpc-service"
+	pb "github.com/gleb-korostelev/short-url.git/proto"
 	"github.com/gleb-korostelev/short-url.git/tools/logger"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -31,31 +35,52 @@ var (
 )
 
 func main() {
+	// Build info
 	fmt.Printf("Build version: %s\n", buildVersion)
 	fmt.Printf("Build date: %s\n", buildDate)
 	fmt.Printf("Build commit: %s\n", buildCommit)
 
+	// Configuration initialization
 	config.ConfigInit()
+
+	// Logger initialization
 	log, _ := zap.NewProduction()
 
+	// Storage initialization
 	store, err := storageInit()
 	if err != nil {
 		return
 	}
 	defer store.Close()
 
+	// Worker Pool initialization
 	workerPool := worker.NewDBWorkerPool(config.MaxConcurrentUpdates)
 	defer workerPool.Shutdown()
+
+	// API service initialization
 	svc := handler.NewAPIService(store, workerPool)
 
+	// Router initialization
 	r := router.RouterInit(svc, log)
 
+	// pprof server initialization
 	// go func() {
 	// 	logger.Infof("Starting pprof server on :6060")
 	// 	if err := http.ListenAndServe(":6060", nil); err != nil {
 	// 		logger.Fatal("pprof server failed", zap.Error(err))
 	// 	}
 	// }()
+
+	// grpc Server initialization
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		logger.Infof("Failed to listen: %v", err)
+	}
+	grpcServer := grpc.NewServer()
+	pb.RegisterURLServiceServer(grpcServer, &grpcservice.URLServiceServerImpl{})
+	if err := grpcServer.Serve(lis); err != nil {
+		logger.Infof("Failed to serve: %v", err)
+	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	defer cancel()
@@ -85,6 +110,7 @@ func main() {
 	}
 }
 
+// Storage initialization for one of inmemory\file\database
 func storageInit() (storage.Storage, error) {
 	if config.DBDSN != "" {
 		database, err := dbimpl.InitDB()

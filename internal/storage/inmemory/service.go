@@ -141,3 +141,22 @@ func (s *service) MarkURLsAsDeleted(ctx context.Context, userID string, shortURL
 
 	return nil
 }
+
+// GetStats provides statistics about the service, such as the number of shortened URLs and registered users.
+func (s *service) GetStats(ctx context.Context) (urlsCount int, usersCount int, err error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	userSet := make(map[string]bool)
+
+	for _, info := range s.cache {
+		if !info.DeletedFlag {
+			urlsCount++
+			userSet[info.UUID.String()] = true
+		}
+	}
+
+	userCount := len(userSet)
+
+	return urlsCount, userCount, nil
+}

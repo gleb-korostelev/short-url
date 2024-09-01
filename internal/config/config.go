@@ -63,17 +63,21 @@ var (
 
 	// ErrGone indicates an error when a link has been marked as deleted.
 	ErrGone = errors.New("this link is gone")
+
+	// ErrUserNotFound indicates an error when can't find userID
+	ErrUserNotFound = errors.New("no userID found")
 )
 
 // Configuration variables are settable via command-line flags or environment variables.
 var (
-	ServerAddr   string                   // ServerAddr is the address where the HTTP server will run.
-	BaseURL      string                   // BaseURL is the base address for resulting shortened URLs.
-	BaseFilePath string                   // BaseFilePath is the file path where URLs are stored when file mode is used.
-	DBDSN        string                   // DBDSN is the Data Source Name for the database connection.
-	JwtKeySecret = "very-very-secret-key" // JwtKeySecret is the secret key for signing JWTs.
-	EnableHTTPS  bool                     // EnableHTTPS flag
-	ConfigPath   string                   // Path to the config JSON file
+	ServerAddr    string                   // ServerAddr is the address where the HTTP server will run.
+	BaseURL       string                   // BaseURL is the base address for resulting shortened URLs.
+	BaseFilePath  string                   // BaseFilePath is the file path where URLs are stored when file mode is used.
+	DBDSN         string                   // DBDSN is the Data Source Name for the database connection.
+	JwtKeySecret  = "very-very-secret-key" // JwtKeySecret is the secret key for signing JWTs.
+	EnableHTTPS   bool                     // EnableHTTPS flag
+	ConfigPath    string                   // Path to the config JSON file
+	TrustedSubnet string                   // TrustedSubnet flag
 )
 
 // ConfigInit initializes the application's configuration by parsing command-line flags
@@ -87,6 +91,7 @@ func ConfigInit() {
 	flag.BoolVar(&EnableHTTPS, "s", false, "Enable HTTPS")
 	flag.StringVar(&ConfigPath, "config", "", "Path to config file")
 	flag.StringVar(&ConfigPath, "c", "", "Path to config file")
+	flag.StringVar(&TrustedSubnet, "t", "", "Trusted subnet")
 
 	flag.Parse()
 
@@ -102,6 +107,7 @@ func ConfigInit() {
 	BaseURL = GetEnv("BASE_URL", BaseURL)
 	BaseFilePath = GetEnv("FILE_STORAGE_PATH", BaseFilePath)
 	DBDSN = GetEnv("DATABASE_DSN", DBDSN)
+	TrustedSubnet = GetEnv("TRUSTED_SUBNET", TrustedSubnet)
 	if os.Getenv("ENABLE_HTTPS") == "true" {
 		EnableHTTPS = true
 	}
@@ -129,6 +135,9 @@ func loadConf(path string) {
 		}
 		if !EnableHTTPS {
 			EnableHTTPS = cfg.EnableHTTPS
+		}
+		if TrustedSubnet == "" {
+			TrustedSubnet = cfg.TrustedSubnet
 		}
 	}
 }
