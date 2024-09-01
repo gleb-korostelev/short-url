@@ -25,20 +25,25 @@ func TestStatsHandler(t *testing.T) {
 		name           string
 		trustedSubnet  string
 		clientIP       string
+		setupMocks     func()
 		expectedStatus int
 		expectedBody   string
 	}{
 		{
-			name:           "Allowed IP within subnet",
-			trustedSubnet:  "192.168.1.0/24",
-			clientIP:       "192.168.1.5",
+			name:          "Allowed IP within subnet",
+			trustedSubnet: "192.168.1.0/24",
+			clientIP:      "192.168.1.5",
+			setupMocks: func() {
+				mockStore.EXPECT().GetStats(gomock.Any()).Return(150, 25, nil)
+			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   `{"urls":100,"users":10}`,
+			expectedBody:   `{"urls":150,"users":25}`,
 		},
 		{
 			name:           "Disallowed IP outside subnet",
 			trustedSubnet:  "192.168.1.0/24",
 			clientIP:       "192.168.2.5",
+			setupMocks:     func() {},
 			expectedStatus: http.StatusForbidden,
 			expectedBody:   "Forbidden\n",
 		},
@@ -46,8 +51,19 @@ func TestStatsHandler(t *testing.T) {
 			name:           "Empty subnet configuration",
 			trustedSubnet:  "",
 			clientIP:       "192.168.1.5",
+			setupMocks:     func() {},
 			expectedStatus: http.StatusForbidden,
 			expectedBody:   "Forbidden\n",
+		},
+		{
+			name:          "Storage error",
+			trustedSubnet: "192.168.1.0/24",
+			clientIP:      "192.168.1.5",
+			setupMocks: func() {
+				mockStore.EXPECT().GetStats(gomock.Any()).Return(0, 0, assert.AnError)
+			},
+			expectedStatus: http.StatusInternalServerError,
+			expectedBody:   "Internal server error\n",
 		},
 	}
 
@@ -59,6 +75,7 @@ func TestStatsHandler(t *testing.T) {
 			req.Header.Set("X-Real-IP", tc.clientIP)
 			rr := httptest.NewRecorder()
 
+			tc.setupMocks()
 			// Setup the handler
 			config.TrustedSubnet = tc.trustedSubnet
 			svc.StatsHandler(rr, req)
