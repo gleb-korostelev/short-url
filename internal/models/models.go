@@ -51,9 +51,16 @@ type Claims struct {
 
 // Config defines server settings thats taken from JSON file
 type Config struct {
-	ServerAddr   string `json:"server_address"`
-	BaseURL      string `json:"base_url"`
-	BaseFilePath string `json:"file_storage_path"`
-	DBDSN        string `json:"database_dsn"`
-	EnableHTTPS  bool   `json:"enable_https"`
+	ServerAddr    string `json:"server_address"`
+	BaseURL       string `json:"base_url"`
+	BaseFilePath  string `json:"file_storage_path"`
+	DBDSN         string `json:"database_dsn"`
+	EnableHTTPS   bool   `json:"enable_https"`
+	TrustedSubnet string `json:"trusted_subnet"`
+}
+
+// Stats defines fields of statistic for /api/internal/stats handler
+type Stats struct {
+	URLs  int `json:"urls"`
+	Users int `json:"users"`
 }

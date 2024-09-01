@@ -36,4 +36,8 @@ type APIServiceI interface {
 	// DeleteURLsHandler handles the deletion of one or more URLs specified in the request body.
 	// It writes the result status to the HTTP response.
 	DeleteURLsHandler(w http.ResponseWriter, r *http.Request)
+
+	// StatsHandler handles getting statistics of URLs amd Users.
+	// It writes the results or an error message in JSON format to the HTTP response.
+	StatsHandler(w http.ResponseWriter, r *http.Request)
 }
