@@ -39,4 +39,7 @@ type Storage interface {
 	// MarkURLsAsDeleted marks specified URLs as deleted for a given user ID.
 	// This method handles the soft deletion of URLs and returns any error encountered during the operation.
 	MarkURLsAsDeleted(ctx context.Context, userID string, shortURLs []string) error
+
+	// GetStats returns the amount of urls and users.
+	GetStats(ctx context.Context) (urlsCount int, usersCount int, err error)
 }
