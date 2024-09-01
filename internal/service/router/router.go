@@ -49,6 +49,7 @@ func RouterInit(svc service.APIServiceI, logger *zap.Logger) *chi.Mux {
 	router.Get("/ping", svc.Ping)
 	router.Get("/{id}", svc.GetOriginal)
 	router.Get("/api/user/urls", svc.GetUserURLs)
+	router.Get("/api/internal/stats", svc.StatsHandler)
 	router.Post("/", svc.PostShorter)
 	router.Post("/api/shorten", svc.PostShorterJSON)
 	router.Post("/api/shorten/batch", svc.ShortenBatchHandler)

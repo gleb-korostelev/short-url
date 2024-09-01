@@ -123,3 +123,8 @@ func (s *service) MarkURLsAsDeleted(ctx context.Context, userID string, shortURL
 	dbimpl.MarkDeleted(s.data, userID, shortURLs)
 	return nil
 }
+
+// GetStats provides statistics about the service, such as the number of shortened URLs and registered users.
+func (s *service) GetStats(ctx context.Context) (urlsCount int, usersCount int, err error) {
+	return dbimpl.GetStats(s.data, ctx)
+}
