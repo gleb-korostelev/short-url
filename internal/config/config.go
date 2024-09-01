@@ -63,6 +63,9 @@ var (
 
 	// ErrGone indicates an error when a link has been marked as deleted.
 	ErrGone = errors.New("this link is gone")
+
+	// ErrUserNotFound indicates an error when can't find userID
+	ErrUserNotFound = errors.New("no userID found")
 )
 
 // Configuration variables are settable via command-line flags or environment variables.

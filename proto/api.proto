@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package urlservice;
+
+option go_package = "urlservice/proto";
+
+// URLService provides methods for managing URLs via gRPC.
+service URLService {
+    rpc GetOriginal(GetOriginalRequest) returns (GetOriginalResponse);
+    rpc Ping(PingRequest) returns (PingResponse);
+    rpc PostShorter(PostShorterRequest) returns (PostShorterResponse);
+    rpc PostShorterJSON(PostShorterJSONRequest) returns (PostShorterJSONResponse);
+    rpc ShortenBatch(ShortenBatchRequest) returns (ShortenBatchResponse);
+    rpc GetUserURLs(GetUserURLsRequest) returns (GetUserURLsResponse);
+    rpc DeleteURLs(DeleteURLsRequest) returns (DeleteURLsResponse);
+    rpc Stats(StatsRequest) returns (StatsResponse);
+}
+
+message GetOriginalRequest {
+    string short_url_id = 1;
+}
+
+message GetOriginalResponse {
+    string original_url = 1;
+}
+
+message PingRequest {
+}
+
+message PingResponse {
+    int32 status = 1;
+}
+
+message PostShorterRequest {
+    string url = 1;
+}
+
+message PostShorterResponse {
+    string short_url = 1;
+}
+
+message PostShorterJSONRequest {
+    string url = 1;
+}
+
+message PostShorterJSONResponse {
+    string short_url = 1;
+}
+
+message ShortenBatchRequest {
+    repeated ShortURLPairReq url_pairs = 1;
+}
+
+message ShortenBatchResponse {
+    repeated ShortURLPairResp url_pairs = 1;
+}
+
+message ShortURLPairReq {
+    string correlation_id = 1;
+    string original_url = 2;
+}
+
+message ShortURLPairResp {
+    string correlation_id = 1;
+    string short_url = 2;
+}
+
+message GetUserURLsRequest {
+    string user_id = 1;
+}
+
+message GetUserURLsResponse {
+    repeated UserURL user_urls = 1;
+}
+
+message UserURL {
+    string short_url = 1;
+    string original_url = 2;
+}
+
+message DeleteURLsRequest {
+    repeated string short_urls = 1;
+}
+
+message DeleteURLsResponse {
+    int32 status = 1;
+}
+
+message StatsRequest {
+}
+
+message StatsResponse {
+    int32 urls_count = 1;
+    int32 users_count = 2;
+}

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net"
 	"net/http"
@@ -54,9 +55,15 @@ func (svc *APIService) StatsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	urlsCount, userCount, err := svc.store.GetStats(context.Background())
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
 	stats := models.Stats{
-		URLs:  100,
-		Users: 10,
+		URLs:  urlsCount,
+		Users: userCount,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

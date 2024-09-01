@@ -3,8 +3,11 @@
 package filecache
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/gleb-korostelev/short-url.git/internal/config"
 	"github.com/gleb-korostelev/short-url.git/internal/models"
@@ -110,4 +113,35 @@ func (s *service) GetAllURLS(ctx context.Context, userID, baseURL string) ([]mod
 func (s *service) MarkURLsAsDeleted(ctx context.Context, userID string, shortURLs []string) error {
 	err := utils.MarkURLsAsDeletedInFile(config.BaseFilePath, userID, shortURLs)
 	return err
+}
+
+// GetStats provides statistics about the service, such as the number of shortened URLs and registered users.
+func (s *service) GetStats(ctx context.Context) (urlsCount int, usersCount int, err error) {
+	file, err := os.Open(config.BaseFilePath)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	userSet := make(map[string]bool)
+	urlCount := 0
+
+	for scanner.Scan() {
+		var data models.URLData
+		if err := json.Unmarshal(scanner.Bytes(), &data); err != nil {
+			continue
+		}
+		if !data.DeletedFlag {
+			urlCount++
+			userSet[data.UUID.String()] = true
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return 0, 0, err
+	}
+
+	userCount := len(userSet)
+	return urlCount, userCount, nil
 }
